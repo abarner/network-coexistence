@@ -459,47 +459,47 @@ Niche.model <- function(S, L, N=1){
 #   same / total
 # }
 # 
-# GetTL <- function(web){
-#   
-#   ## takes predation matrix with consumers in columns
-#   ## identify the columns with basal species
-#   tweb <- t(web)
-#   
-#   ## make the rows add to one
-#   rs <- rowSums(tweb)
-#   for(i in 1:length(tweb[,1]))
-#     tweb[i,tweb[i,]==1] = 1/rs[i]
-#   
-#   nb.TL <- try(solve(diag(length(tweb[,1])) - tweb), T)
-#   
-#   if(class(nb.TL)=="try-error")
-#     nbTL <- rep(NA, length(tweb[,1]))
-#   
-#   if(class(nb.TL)!="try-error")
-#     nbTL <- rowSums(nb.TL)
-#   
-#   nbTL
-#   
-# }
+GetTL <- function(web){
+
+  ## takes predation matrix with consumers in columns
+  ## identify the columns with basal species
+  tweb <- t(web)
+
+  ## make the rows add to one
+  rs <- rowSums(tweb)
+  for(i in 1:length(tweb[,1]))
+    tweb[i,tweb[i,]==1] = 1/rs[i]
+
+  nb.TL <- try(solve(diag(length(tweb[,1])) - tweb), T)
+
+  if(class(nb.TL)=="try-error")
+    nbTL <- rep(NA, length(tweb[,1]))
+
+  if(class(nb.TL)!="try-error")
+    nbTL <- rowSums(nb.TL)
+
+  nbTL
+
+}
 # 
 # 
 # 
-# ## takes a food web in matrix format and coverts it to list format
-# Matrix.to.list <- function(web.matrix, predator.first=TRUE){
-#   if(length(dimnames(web.matrix)[[1]])==length(web.matrix[1,]))
-#     species.names <- dimnames(web.matrix)[[1]]
-#   else
-#     species.names <- 1:length(web.matrix[,1])
-#   web.list <- matrix(0, sum(web.matrix), 2)
-#   counter <- 1
-#   for(i in 1:length(web.matrix[,1]))
-#     for(j in 1:length(web.matrix[,1]))
-#       if(web.matrix[i,j]==1){
-#         web.list[counter,] <- c(species.names[i],species.names[j])
-#         counter <- counter + 1
-#       }
-#   if(!predator.first)
-#     web.list <- cbind(web.list[,2], web.list[,1])
-#   web.list
-# }
-# 
+## takes a food web in matrix format and coverts it to list format
+Matrix.to.list <- function(web.matrix, predator.first=TRUE){
+  if(length(dimnames(web.matrix)[[1]])==length(web.matrix[1,]))
+    species.names <- dimnames(web.matrix)[[1]]
+  else
+    species.names <- 1:length(web.matrix[,1])
+  web.list <- matrix(0, sum(web.matrix), 2)
+  counter <- 1
+  for(i in 1:length(web.matrix[,1]))
+    for(j in 1:length(web.matrix[,1]))
+      if(web.matrix[i,j]==1){
+        web.list[counter,] <- c(species.names[i],species.names[j])
+        counter <- counter + 1
+      }
+  if(!predator.first)
+    web.list <- cbind(web.list[,2], web.list[,1])
+  web.list
+}
+
