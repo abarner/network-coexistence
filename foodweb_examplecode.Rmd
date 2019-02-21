@@ -1,0 +1,57 @@
+---
+title: "Untitled"
+output: github_document
+---
+
+## Niche and Cascade Models
+
+There are a few functions already written to generate food webs using the cascade model and the niche model (Williams & Martinez 2000 Nature, doi: 10.1038/35004572), provided by Owen Petchy:
+
+```{r}
+source("petchey_food_web_functions.R")
+```
+
+For a given number of species (*S*), a given number of links (*L*), generate one (N = 1) or a list (N > 1) of networks as adjacency matrices.
+
+```{r}
+Cascade.model(S = 5, L = 5, N = 1)
+```
+
+```{r}
+Niche.model(S = 5, L = 5, N = 1)
+```
+
+## Allometric Trophic Network (ATN) models
+
+Following the example of an implementation by Iles & Novak (2016 The American Naturalist, doi: 10.1086/686730), the general steps for implementing an ATN model are:
+
+1. Generate a food web using the niche or cascade model, for a chosen number of species and connectance  
+2. Assign body sizes to the species, based on consumer-resource mass ratios  
+3. Use as inputs to Yodzis & Innes's bioenergetic model of consumer-resource dynamics
+
+This workflow has recently been implemented for **julia**, a different programming language, in Delmas et al. 2017 Methods in Ecology & Evolution (doi: 10.1111/2041-210X.12713).
+
+There is also a non-CRAN version of a package for R available, `gruyere`
+
+```{r}
+## must have "cheddar" and "deSolve"
+
+library(cheddar); library(deSolve)
+devtools::install_github("quicklizard99/gruyere")
+library(gruyere)
+
+#library("gruyere", lib.loc="/Library/Frameworks/R.framework/Versions/3.5/Resources/library")
+```
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
