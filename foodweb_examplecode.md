@@ -1,62 +1,81 @@
----
-title: "Untitled"
-output: github_document
----
+Untitled
+================
 
 Load functions we'll use throughout
 
-```{r, message=FALSE, warning=FALSE}
+``` r
 library(tidyverse)
 ```
 
-
-## Niche and Cascade Models
+Niche and Cascade Models
+------------------------
 
 There are a few functions already written to generate food webs using the cascade model and the niche model (Williams & Martinez 2000 Nature, doi: 10.1038/35004572), provided by Owen Petchy:
 
-```{r}
+``` r
 source("petchey_food_web_functions.R")
 ```
 
-For a given number of species (*S*), a given number of links (*L*), generate one (N = 1) or a list (N > 1) of networks as adjacency matrices.
+For a given number of species (*S*), a given number of links (*L*), generate one (N = 1) or a list (N &gt; 1) of networks as adjacency matrices.
 
-```{r}
+``` r
 Cascade.model(S = 5, L = 5, N = 1)
 ```
 
-```{r}
+    ##   1 2 3 4 5
+    ## 1 0 1 0 0 0
+    ## 2 0 0 0 1 1
+    ## 3 0 0 0 0 1
+    ## 4 0 0 0 0 1
+    ## 5 0 0 0 0 0
+
+``` r
 Niche.model(S = 5, L = 5, N = 1)
 ```
 
-## Allometric Trophic Network (ATN) models
+    ##   1 2 3 4 5
+    ## 1 0 0 0 0 1
+    ## 2 0 0 0 0 1
+    ## 3 0 0 0 0 0
+    ## 4 0 0 0 0 0
+    ## 5 0 0 0 0 0
+
+Allometric Trophic Network (ATN) models
+---------------------------------------
 
 Following the example of an implementation by Iles & Novak (2016 The American Naturalist, doi: 10.1086/686730; see also Brose et al. 2006 Ecology Letters, doi: 10.1111/j.1461-0248.2006.00978.x), the general steps for implementing an ATN model are:
 
-1. Generate a food web using the niche or cascade model, for a chosen number of species and connectance  
-2. Assign body sizes to the species, based on consumer-resource mass ratios  
-3. Use as inputs to Yodzis & Innes's bioenergetic model of consumer-resource dynamics
+1.  Generate a food web using the niche or cascade model, for a chosen number of species and connectance
+2.  Assign body sizes to the species, based on consumer-resource mass ratios
+3.  Use as inputs to Yodzis & Innes's bioenergetic model of consumer-resource dynamics
 
 This workflow has recently been implemented for **julia**, a different programming language, in Delmas et al. 2017 Methods in Ecology & Evolution (doi: 10.1111/2041-210X.12713).
 
 There is also a non-CRAN version of a package for R available, `gruyere`
 
-```{r}
+``` r
 ## must have "cheddar" and "deSolve"
 
 library(cheddar); library(deSolve)
 devtools::install_github("quicklizard99/gruyere")
+```
+
+    ## Skipping install of 'gruyere' from a github remote, the SHA1 (50231de6) has not changed since last install.
+    ##   Use `force = TRUE` to force installation
+
+``` r
 library(gruyere)
 
 #library("gruyere", lib.loc="/Library/Frameworks/R.framework/Versions/3.5/Resources/library")
 ```
 
-This package is also available for source download at:http://quicklizard99.github.io/gruyere/, inside of which can be found the example vignette.
+This package is also available for source download at:<http://quicklizard99.github.io/gruyere/>, inside of which can be found the example vignette.
 
 From the vignette, can implement a test run.
 
 #### Helper functions to generate ATN models with "gruyere"
 
-```{r}
+``` r
 # function to assign body size to secondary consumers
 # in a vector
 generate_sc_size <- function(tl) {
@@ -107,7 +126,7 @@ get_sizes <- function(web_tl) {
 
 #### Test run a simulation
 
-```{r}
+``` r
 # generate network using niche model
 web <- Niche.model(S = 10, L = .2*(100), N = 1)
 
@@ -176,27 +195,17 @@ web_sim <- RunSimulation(initial.state=Biomass(web_community),
                          observers=observers)
 ```
 
+    ## [1] "Simulation time:"
+    ##    user  system elapsed 
+    ##   0.203   0.016   0.221
+
 Plot the outcome of just this first simulation
 
-```{r, echo = FALSE}
-# plot what happened
-web_tseries <- GetTimeSeries(collector)
-as_tibble(web_tseries) %>%
-  gather(-time, key = "species", value = "abundance") %>%
-  # merge with information about trophic level
-  left_join(web_categories_df, by = "species") %>%
-  # add a little to abundance to make able to log-transform 
-  mutate(abundance = abundance + 0.0001) %>%
-  # plot only last time steps
-  #filter(time < 50) %>%
-  ggplot(aes(x = time, y = abundance, color = categories), alpha = 0.5) +
-  geom_point() + geom_line(aes(group = species)) +
-  scale_y_log10()
-```
+![](foodweb_examplecode_files/figure-markdown_github/unnamed-chunk-8-1.png)
 
 If the goal of the simulation is to generate time series for multi-trophic networks, then we should take the next steps (following Iles & Novak 2016) to re-run the simulation until we generate networks with at least ~80% of the species persisting.
 
-```{r}
+``` r
 # are at least 80% of the species persisting?
 percent_persist <- length(which(web_sim$final.state > 10^(-30))) / length(web_sim$final.state)
 
@@ -208,4 +217,4 @@ if (percent_persist < 0.8) {
 }
 ```
 
-
+    ## NULL
