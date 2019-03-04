@@ -1,5 +1,5 @@
 ---
-title: "Untitled"
+title: "Allometric Trophic Network"
 output: github_document
 ---
 
@@ -38,13 +38,13 @@ Following the example of an implementation by Iles & Novak (2016 The American Na
 
 This workflow has recently been implemented for **julia**, a different programming language, in Delmas et al. 2017 Methods in Ecology & Evolution (doi: 10.1111/2041-210X.12713).
 
-There is also a non-CRAN version of a package for R available, `gruyere`
+There is also a non-CRAN version of a package for R available, `gruyere`. However, the underlying code for the ODE runs in C, so the underlying model cannot be altered.
 
 ```{r}
 ## must have "cheddar" and "deSolve"
 
 library(cheddar); library(deSolve)
-devtools::install_github("quicklizard99/gruyere")
+#devtools::install_github("quicklizard99/gruyere")
 library(gruyere)
 
 #library("gruyere", lib.loc="/Library/Frameworks/R.framework/Versions/3.5/Resources/library")
@@ -105,7 +105,7 @@ get_sizes <- function(web_tl) {
 }
 ```
 
-#### Test run a simulation
+#### Test run a simulation in 'gruyere'
 
 ```{r}
 # generate network using niche model
@@ -208,4 +208,27 @@ if (percent_persist < 0.8) {
 }
 ```
 
+#### Hard-code Yodzis & Innes 1992
+
+Example code for LV model in R:
+
+```{r}
+library(deSolve)
+ 
+LotVmod <- function (Time, State, Pars) {
+    with(as.list(c(State, Pars)), {
+        dx = x*(alpha - beta*y)
+        dy = -y*(gamma - delta*x)
+        return(list(c(dx, dy)))
+    })
+}
+ 
+Pars <- c(alpha = 2, beta = .5, gamma = .2, delta = .6)
+State <- c(x = 10, y = 10)
+Time <- seq(0, 100, by = 1)
+ 
+out <- as.data.frame(ode(func = LotVmod, y = State, parms = Pars, times = Time))
+ 
+matplot(out[,-1], type = "l", xlab = "time", ylab = "population")
+```
 
