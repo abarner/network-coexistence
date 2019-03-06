@@ -1,21 +1,20 @@
----
-title: "Consumer-Resource Models with Variation"
-output: github_document
----
+Consumer-Resource Models with Variation
+================
 
 One of the problems with the ATN model is that its goal is to generate "realistic" (or allometrically-constrained) networks of species that stably coexist. In modern coexistence theory, interested in how variation can influence coexistence.
 
-## Example ODE in R
+Example ODE in R
+----------------
 
 Load functions we'll use throughout
 
-```{r, message=FALSE, warning=FALSE}
+``` r
 library(tidyverse); library(deSolve)
 ```
 
 Example code for LV model in R:
 
-```{r}
+``` r
 LotVmod <- function (Time, State, Pars) {
     with(as.list(c(State, Pars)), {
         dx = x*(alpha - beta*y)
@@ -33,13 +32,16 @@ out <- as.data.frame(ode(func = LotVmod, y = State, parms = Pars, times = Time))
 matplot(out[,-1], type = "l", xlab = "time", ylab = "population")
 ```
 
-## Vasseur & Fox 2007 Ecology Letters
+![](cr_variation_examplecode_files/figure-markdown_github/unnamed-chunk-2-1.png)
+
+Vasseur & Fox 2007 Ecology Letters
+----------------------------------
 
 Continuous time ODE of a 4 species system (resource, 2 consumers, 1 top predator), building on discrete time version in Ripa & Ives (2003, Theoretical Population Biology). Includes environmental fluctuation - though focus is more on the generation of population synchrony.
 
 Note that as written, without any environmental variation in consumer mortality, the dynamics follow those of McCann, Hastings, Huxel (1998, Nature)
 
-```{r}
+``` r
 VassFox <- function (Time, State, Pars) {
     with(as.list(c(State, Pars)), {
       #M_C1_j = M_C1_0 * exp()
@@ -89,7 +91,8 @@ Time <- seq(0, 1000, by = 1)
  
 VF_out <- as.data.frame(ode(func = VassFox, y = State, parms = pars, times = Time))
 matplot(VF_out[,-1], type = "l", xlab = "time", ylab = "population")
-````
+```
+
+![](cr_variation_examplecode_files/figure-markdown_github/unnamed-chunk-3-1.png)
 
 Will need to figure out how to implement the covariance (equations 1 & 2 in Vasseur & Fox, also equations 3 & 4 in Gouhier et al. 2010 Am Nat)
-
