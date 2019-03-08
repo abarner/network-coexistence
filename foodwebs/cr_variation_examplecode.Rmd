@@ -5,6 +5,8 @@ output: github_document
 
 One of the problems with the ATN model is that its goal is to generate "realistic" (or allometrically-constrained) networks of species that stably coexist. In modern coexistence theory, interested in how variation can influence coexistence.
 
+Example text
+
 ## Example ODE in R
 
 Load functions we'll use throughout
