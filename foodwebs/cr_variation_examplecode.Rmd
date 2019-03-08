@@ -51,7 +51,7 @@ VassFox <- function (Time, State, Pars) {
       
       dP = - (M_P * P) + ( ( (J_P * P) * ( (O_P_C1 * C1) + ( (1 - O_P_C1) * C2) ) ) / ( (O_P_C1 * C1) + ((1 - O_P_C1) * C2) + C_0) ) 
       dC1 = - (M_C1_0 * C1) + ( (O_C1_R * J_C1 * C1 * R) / (R + R_0_1) ) - ( (O_P_C1 * J_P * P * C1) / ( (O_P_C1 * C1) + ((1 - O_P_C1) * C2) + C_0) )
-      dC2 = - (M_C2_0 * C2) + ( (O_C2_R * J_C2 * C2 * R) / (R + R_0_2) ) - ( (O_P_C1 * J_P * P * C2) / ( (O_P_C1 * C1) + ((1 - O_P_C1) * C2) + C_0) )
+      dC2 = - (M_C2_0 * C2) + ( (O_C2_R * J_C2 * C2 * R) / (R + R_0_2) ) - ( ((1 - O_P_C1) * J_P * P * C2) / ( ( O_P_C1 * C1) + ((1 - O_P_C1) * C2) + C_0) )
       dR = r * R * (1 - (R / K)) - ( (O_C1_R * J_C1 * C1 * R) / (R + R_0_1) ) - ( (O_C2_R * J_C2 * C2 * R) / (R + R_0_2) )
       
       return(list(c(dP, dC1, dC2, dR)))
