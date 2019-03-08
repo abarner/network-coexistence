@@ -168,7 +168,7 @@ State <- c(P = 1, C1 = 1, C2 = 1, R = 1)
 Time <- seq(0, 1000, by = 1)
 eventtime <- seq(1, 1000, by = 1)
  
-VF_out <- as.data.frame(ode(func = VassFox, y = State, parms = pars, times = Time,
+VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = Time,
                             events = list(func = eventfun, 
                                           time = eventtime)))
 ```
