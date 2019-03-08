@@ -5,9 +5,9 @@ output: github_document
 
 One of the problems with the ATN model is that its goal is to generate "realistic" (or allometrically-constrained) networks of species that stably coexist. In modern coexistence theory, interested in how variation can influence coexistence.
 
-Example text
-
 ## Example ODE in R
+
+[Vignette](https://cran.r-project.org/web/packages/deSolve/vignettes/deSolve.pdf) for solving ODEs in R with package `deSolve`.
 
 Load functions we'll use throughout
 
@@ -96,22 +96,20 @@ plot.new()
 matplot(VF_out[,-1], type = "l", xlab = "time", ylab = "population"); legend("topright", legend = c("P", "C1", "C2", "R"), col = 1:4, cex = 0.5, pch = 16)
 ```
 
-* Need to add legend
-
 
 ### V & F: co-variation in consumer mortality
 
 Will need to figure out how to implement the covariance (equations 1 & 2 in Vasseur & Fox, also equations 3 & 4 in Gouhier et al. 2010 Am Nat)
 
 ```{r}
-VassFox <- function (Time, State, Pars) {
+VassFox_Cvar <- function (Time, State, Pars) {
     with(as.list(c(State, Pars)), {
       #M_C1_j = M_C1_0 * exp()
       #M_C2_j = M_C2_0 * exp()
       
       dP = - (M_P * P) + ( ( (J_P * P) * ( (O_P_C1 * C1) + ( (1 - O_P_C1) * C2) ) ) / ( (O_P_C1 * C1) + ((1 - O_P_C1) * C2) + C_0) ) 
-      dC1 = - (M_C1_0 * C1) + ( (O_C1_R * J_C1 * C1 * R) / (R + R_0_1) ) - ( (O_P_C1 * J_P * P * C1) / ( (O_P_C1 * C1) + ((1 - O_P_C1) * C2) + C_0) )
-      dC2 = - (M_C2_0 * C2) + ( (O_C2_R * J_C2 * C2 * R) / (R + R_0_2) ) - ( (O_P_C1 * J_P * P * C2) / ( (O_P_C1 * C1) + ((1 - O_P_C1) * C2) + C_0) )
+      dC1 = - (M_C1 * C1) + ( (O_C1_R * J_C1 * C1 * R) / (R + R_0_1) ) - ( (O_P_C1 * J_P * P * C1) / ( (O_P_C1 * C1) + ((1 - O_P_C1) * C2) + C_0) )
+      dC2 = - (M_C2 * C2) + ( (O_C2_R * J_C2 * C2 * R) / (R + R_0_2) ) - ( (O_P_C1 * J_P * P * C2) / ( (O_P_C1 * C1) + ((1 - O_P_C1) * C2) + C_0) )
       dR = r * R * (1 - (R / K)) - ( (O_C1_R * J_C1 * C1 * R) / (R + R_0_1) ) - ( (O_C2_R * J_C2 * C2 * R) / (R + R_0_2) )
       
       return(list(c(dP, dC1, dC2, dR)))
@@ -119,6 +117,22 @@ VassFox <- function (Time, State, Pars) {
     })
 }
 
+
+sigma <- 0.55
+ro <- 0.75
+
+z <- matrix(data = rnorm(n = 2*1000, mean = 0, sd = 1), nrow = 2)
+cholesky <- matrix(data = c(sigma^2, ro * (sigma ^2), ro * (sigma ^2), sigma ^2), 
+                   nrow = 2)
+g <- cholesky %*% z
+
+eventfun <- function(t, y, M_C1_0, M_C2_0, g) {
+  with (as.list(y),{
+    M_C1 <- M_C1_0 * g[1,]
+    M_C2 <- M_C2_0 * g[2,]
+    return(c(M_C1, M_C2))
+  })
+}
 
 # from Table 1
 pars <- c(
@@ -134,8 +148,10 @@ pars <- c(
   J_P = 0.4,
   # medial consumer 1 mortality rate
   M_C1_0 = 0.4,
+  M_C1 = 0,
   # medial consumer 2 mortality rate
   M_C2_0 = 0.2,
+  M_C2 = 0,
   # predator mortality rate
   M_P = 0.08,
   # half saturation constant
@@ -148,7 +164,13 @@ pars <- c(
   O_C2_R = 0.98
 )
 
-
+State <- c(P = 1, C1 = 1, C2 = 1, R = 1)
+Time <- seq(0, 1000, by = 1)
+eventtime <- seq(1, 1000, by = 1)
+ 
+VF_out <- as.data.frame(ode(func = VassFox, y = State, parms = pars, times = Time,
+                            events = list(func = eventfun, 
+                                          time = eventtime)))
 ```
 
 
