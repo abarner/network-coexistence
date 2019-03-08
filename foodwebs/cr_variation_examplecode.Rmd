@@ -126,10 +126,12 @@ cholesky <- matrix(data = c(sigma^2, ro * (sigma ^2), ro * (sigma ^2), sigma ^2)
                    nrow = 2)
 g <- cholesky %*% z
 
-eventfun <- function(t, y, M_C1_0, M_C2_0, g) {
+eventfun <- function(t, y, pars) {
   with (as.list(y),{
-    M_C1 <- M_C1_0 * g[1,]
-    M_C2 <- M_C2_0 * g[2,]
+    z <- matrix(data = rnorm(n = 2, mean = 0, sd = 1), nrow = 2)
+    g <- cholesky %*% z
+    M_C1 <- 0.4 * g[1]
+    M_C2 <- 0.2 * g[2]
     return(c(M_C1, M_C2))
   })
 }
@@ -170,7 +172,7 @@ eventtime <- seq(1, 1000, by = 1)
  
 VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = Time,
                             events = list(func = eventfun, 
-                                          time = eventtime)))
+                                          time = eventtime, pars=cholesky)))
 ```
 
 
