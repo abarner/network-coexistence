@@ -106,13 +106,19 @@ VassFox_Cvar <- function (Time, State, Pars) {
     with(as.list(c(State, Pars)), {
       #M_C1_j = M_C1_0 * exp()
       #M_C2_j = M_C2_0 * exp()
+      cholesky <- matrix(data = c(sigma^2, ro * (sigma ^2), ro * (sigma ^2), sigma ^2), 
+                   nrow = 2)
+          z <- matrix(data = rnorm(n = 2, mean = 0, sd = 1), nrow = 2)
+    g <- cholesky %*% z
+    M_C1 <- 0.4 * exp(g[1])
+    M_C2 <- 0.2 * exp(g[2])
       
       dP = - (M_P * P) + ( ( (J_P * P) * ( (O_P_C1 * C1) + ( (1 - O_P_C1) * C2) ) ) / ( (O_P_C1 * C1) + ((1 - O_P_C1) * C2) + C_0) ) 
       dC1 = - (M_C1 * C1) + ( (O_C1_R * J_C1 * C1 * R) / (R + R_0_1) ) - ( (O_P_C1 * J_P * P * C1) / ( (O_P_C1 * C1) + ((1 - O_P_C1) * C2) + C_0) )
       dC2 = - (M_C2 * C2) + ( (O_C2_R * J_C2 * C2 * R) / (R + R_0_2) ) - ( (O_P_C1 * J_P * P * C2) / ( (O_P_C1 * C1) + ((1 - O_P_C1) * C2) + C_0) )
       dR = r * R * (1 - (R / K)) - ( (O_C1_R * J_C1 * C1 * R) / (R + R_0_1) ) - ( (O_C2_R * J_C2 * C2 * R) / (R + R_0_2) )
       
-      return(list(c(dP, dC1, dC2, dR)))
+      return(list(c(dP, dC1, dC2, dR, M_C1, M_C2)))
       
     })
 }
@@ -150,10 +156,8 @@ pars <- c(
   J_P = 0.4,
   # medial consumer 1 mortality rate
   M_C1_0 = 0.4,
-  M_C1 = 0,
   # medial consumer 2 mortality rate
   M_C2_0 = 0.2,
-  M_C2 = 0,
   # predator mortality rate
   M_P = 0.08,
   # half saturation constant
@@ -163,16 +167,16 @@ pars <- c(
   # preference coefficient
   O_P_C1 = 0.92,
   O_C1_R = 1.0,
-  O_C2_R = 0.98
+  O_C2_R = 0.98,
+  sigma=sigma,
+  ro=ro
 )
 
-State <- c(P = 1, C1 = 1, C2 = 1, R = 1)
+State <- c(P = 1, C1 = 1, C2 = 1, R = 1,  M_C1 = 0,   M_C2 = 0)
 Time <- seq(0, 1000, by = 1)
 eventtime <- seq(1, 1000, by = 1)
  
-VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = Time,
-                            events = list(func = eventfun, 
-                                          time = eventtime, pars=cholesky)))
+VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = Time))
 ```
 
 
