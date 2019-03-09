@@ -57,14 +57,24 @@ do.population.size.limpets <- function(S, L.prev, S.r, R, delta) {
   return(L)
 }
 
-do.population.size.whelks <- function(W.prev, R, S) {
+do.population.size.whelks <- function(W.prev, 
+                                      #W.feeding, 
+                                      S, 
+                                      R) {
   # W.prev is whelk population size in the previous month
   # p is per capita predation rate
   # B.prev is the B. glandula population
   # C.prev is the C. fissus/dalli population
   # R is the recruitment rate
   # S is the survival rate
-  W <- W.prev*S+R
+  # W.feeding is food intake
+  
+  # note that the functional form of this population model is unclear
+  # from the manuscript. Alternate model forms could be:
+  W <- W.prev * S + R
+  # W <- W.prev * W. feeding + R
+  # W <- W.prev*W.feeding*S + R
+  
   return(W)
 }
 
@@ -74,15 +84,17 @@ do.whelk.recruitment <- function(avg.C, avg.B, p, Y, W.prev, B.prev, C.prev) {
   # p is the per capita predation rate
   R <- (avg.C + avg.B)*3*p*Y*W.prev*(B.prev+C.prev)
   if (R > 90) {
+    # note that if the max. recruitment rate is not set, then
+    # whelk recruitment becomes very large very quickly
     R <- 90
   }
   return(R)
 }
 
-do.population.size.seastar <- function(S, P.prev) {
+do.population.size.seastar <- function(S, P.prev, R) {
   # S is seastar adult survival
   # P.prev is previous seastar population size
-  P <- S*P.prev + survival.recruit.P*
+  P <- S*P.prev + survival.recruit.P*R
   if (P > 6) {
     P <- 6
   }
@@ -126,6 +138,10 @@ T <- 1
 
 years <- 50
 timesteps <- years*12
+month <- rep(c("Apr", "May", "Jun", "Jul", "Aug", 
+               "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar"), years)
+summer <- c("Apr", "May", "Jun", "Jul", "Aug", "Sep")
+winter <- c("Oct", "Nov", "Dec", "Jan", "Feb", "Mar")
 
 B <- C <- L <- W <- P <- F <- rep(NA, timesteps)
 B[1] <- 4100
@@ -133,7 +149,7 @@ C[1] <- 11000
 #B[1] <- 0
 #C[1] <- 0
 L[1] <- 239
-W[1] <- 10
+W[1] <- 93
 P[1] <- 1
 
 F[1] <- do.free.space.calculation(T=T, B=B[1], size.B=size.B, C=C[1], 
@@ -190,7 +206,7 @@ for (t in 2:timesteps) {
                                        S.r = survival.recruit.C, R=C.recruits, p.star=p.seastar, S.prev=P[t-1])
   L[t] <- do.population.size.limpets(S=survival.L, L.prev=L[t-1], S.r=survival.recruit.L, R=L.recruits, delta=delta)
  
-  if(t%/%3 == 0) {
+  if(month[t] == "Jun") {
     W.recruits <- do.whelk.recruitment(avg.C=mean(c(C[t], C[t-1], C[t-2])), 
                                        avg.B=mean(c(B[t], B[t-1], B[t-2])),
                                        p=p.whelk, Y=Y, W.prev=W[t-1], B.prev=B[t], C.prev=C[t])   
@@ -198,9 +214,21 @@ for (t in 2:timesteps) {
     W.recruits <- 0
   }
   
-  W[t] <- do.population.size.whelks(W.prev=W[t-1], R=W.recruits, S=survival.W)
+  ## Include this if using form of whelk population model that depends 
+  ## on barnacle population size
   
-  P[t] <- do.population.size.seastar(S=survival.S, P.prev=P[t-1])
+  # if(month[t] %in% summer) {
+  #   W.feeding <- p.whelk*(B[t-1]+C[t-1]) / (1+ (p.whelk*(B[t-1]+C[t-1])))
+  # } else {
+  #   W.feeding <- p.whelk*(B[t-6]+C[t-6]) / (1+ (p.whelk*(B[t-6]+C[t-6])))
+  # }
+  
+  W[t] <- do.population.size.whelks(W.prev=W[t-1],
+                                    #W.feeding = W.feeding, 
+                                    S = survival.W,
+                                    R=W.recruits)
+  
+  P[t] <- do.population.size.seastar(S=survival.P, P.prev=P[t-1], R=P.recruits)
   
   F[t] <- do.free.space.calculation(T=T, B=B[t], size.B=size.B, C=C[t], 
                                     size.C=size.C, L=L[t], size.L=size.L)
@@ -214,7 +242,10 @@ plot(C, xlab="Time", ylab="C. fissus")
 plot(L, xlab="Time", ylab="Limpets")
 
 quartz(width=6, height=4)
-par(mfrow=c(1,2))
+par(mfrow=c(1,3))
 plot(W, xlab="Time", ylab="Whelk")
 plot(P, xlab="Time", ylab="Seastars")
+plot(F, xlab = "Time", ylab = "Free Space")
+
+
 
