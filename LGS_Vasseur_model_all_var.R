@@ -1,4 +1,8 @@
 library(deSolve)
+library(ggplot2)
+library(reshape)
+library(cowplot)
+library(tidyverse)
 
 VassFox_Cvar <- function (Time, State, Pars) {
   with(as.list(c(State, Pars)), {
