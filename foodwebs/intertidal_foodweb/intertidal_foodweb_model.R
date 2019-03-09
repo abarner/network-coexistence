@@ -82,7 +82,7 @@ do.whelk.recruitment <- function(avg.C, avg.B, p, Y, W.prev, B.prev, C.prev) {
 do.population.size.seastar <- function(S, P.prev) {
   # S is seastar adult survival
   # P.prev is previous seastar population size
-  P <- S*P.prev + rnorm(1,0,1)
+  P <- S*P.prev + survival.recruit.P*
   if (P > 6) {
     P <- 6
   }
@@ -101,16 +101,18 @@ size.L <- .00008
 size.recruit.B <- .000003
 size.recruit.C <- .000003
 size.recruit.L <- .000003
-
+  
 survival.B <- .7
 survival.C <- .7
 survival.L <- .97
 survival.W <- .94
-survival.S <- .992
+survival.P <- .992
+
 
 survival.recruit.B <- .7
 survival.recruit.C <- .7
 survival.recruit.L <- .88
+survival.recruit.P <- .998
 
 delta <- -.02 # density dependence for limpets
 p.whelk <- .01 # per capita whelk predation rate
@@ -142,16 +144,6 @@ B.stdev <- sqrt(3.24*10^10)
 location.B <- log(B.mean^2 / sqrt(B.stdev^2 + B.mean^2))
 shape.B <- sqrt(log(1 + (B.stdev^2 / B.mean^2)))
 
-B.mean <- 50000
-B.stdev <- sqrt(3.24*10^10)
-location.B <- log(B.mean^2 / sqrt(B.stdev^2 + B.mean^2))
-shape.B <- sqrt(log(1 + (B.stdev^2 / B.mean^2)))
-
-B.mean <- 50000
-B.stdev <- sqrt(3.24*10^10)
-location.B <- log(B.mean^2 / sqrt(B.stdev^2 + B.mean^2))
-shape.B <- sqrt(log(1 + (B.stdev^2 / B.mean^2)))
-
 C.mean <- 30000
 C.stdev <- sqrt(3.6*10^9)
 location.C <- log(C.mean^2 / sqrt(C.stdev^2 + C.mean^2))
@@ -162,6 +154,11 @@ L.stdev <- sqrt(2.8*10^7)
 location.L <- log(L.mean^2 / sqrt(L.stdev^2 + L.mean^2))
 shape.L <- sqrt(log(1 + (L.stdev^2 / L.mean^2)))
 
+P.mean <- 3800
+P.stdev <- sqrt(3.7*10^7)
+location.P <- log(P.mean^2 / sqrt(P.stdev^2 + P.mean^2))
+shape.P <- sqrt(log(1 + (P.stdev^2 / P.mean^2)))
+
 for (t in 2:timesteps) {
   B.potential.recruits <- do.potential.recruitment(F=F[t-1], size.x=size.B, size.recruit.x=size.recruit.B, 
                                          larvae.x=rlnorm(n=1, location.B, shape.B))
@@ -169,7 +166,7 @@ for (t in 2:timesteps) {
                                          larvae.x=rlnorm(n=1, location.C, shape.C))
   L.potential.recruits <- do.potential.recruitment(F=F[t-1], size.x=size.L, size.recruit.x=size.recruit.L, 
                                          larvae.x=rlnorm(n=1, location.L, shape.L))
-  
+
   # note that there are more recruits than potential recruits :(
   B.recruits <- do.actual.recruitment(F=F[t-1], L= B.potential.recruits, L.B=B.potential.recruits, 
                                       size.B=size.B, L.C=C.potential.recruits, size.C=size.C,
@@ -180,6 +177,7 @@ for (t in 2:timesteps) {
   L.recruits <- do.actual.recruitment(F=F[t-1], L= L.potential.recruits, L.B=B.potential.recruits, 
                                       size.B=size.B, L.C=C.potential.recruits, size.C=size.C,
                                       L.L=L.potential.recruits, size.L=size.L)
+  P.recruits <- rlnorm(n=1, location.P, shape.P)
   
   # make sure that we only recruit as many as we have
   if (B.potential.recruits > B.recruits) {B.recruits <- B.potential.recruits}
