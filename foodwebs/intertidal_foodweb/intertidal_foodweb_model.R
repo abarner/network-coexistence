@@ -126,6 +126,10 @@ T <- 1
 
 years <- 50
 timesteps <- years*12
+month <- rep(c("Apr", "May", "Jun", "Jul", "Aug", 
+               "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar"), years)
+summer <- c("Apr", "May", "Jun", "Jul", "Aug", "Sep")
+winter <- c("Oct", "Nov", "Dec", "Jan", "Feb", "Mar")
 
 B <- C <- L <- W <- P <- F <- rep(NA, timesteps)
 B[1] <- 4100
@@ -190,12 +194,18 @@ for (t in 2:timesteps) {
                                        S.r = survival.recruit.C, R=C.recruits, p.star=p.seastar, S.prev=P[t-1])
   L[t] <- do.population.size.limpets(S=survival.L, L.prev=L[t-1], S.r=survival.recruit.L, R=L.recruits, delta=delta)
  
-  if(t%/%3 == 0) {
+  if(month[t] == "Jun") {
     W.recruits <- do.whelk.recruitment(avg.C=mean(c(C[t], C[t-1], C[t-2])), 
                                        avg.B=mean(c(B[t], B[t-1], B[t-2])),
                                        p=p.whelk, Y=Y, W.prev=W[t-1], B.prev=B[t], C.prev=C[t])   
   } else {
     W.recruits <- 0
+  }
+  
+  if(month[t] %in% summer) {
+    W.feeding
+  } else {
+    
   }
   
   W[t] <- do.population.size.whelks(W.prev=W[t-1], R=W.recruits, S=survival.W)
