@@ -57,7 +57,7 @@ do.population.size.limpets <- function(S, L.prev, S.r, R, delta) {
   return(L)
 }
 
-do.population.size.whelks <- function(W.prev, R, S, W.feeding) {
+do.population.size.whelks <- function(W.prev, R, S) {
   # W.prev is whelk population size in the previous month
   # p is per capita predation rate
   # B.prev is the B. glandula population
@@ -65,7 +65,7 @@ do.population.size.whelks <- function(W.prev, R, S, W.feeding) {
   # R is the recruitment rate
   # S is the survival rate
   # W.feeding is food intake
-  W <- W.prev*S*W.feeding+R
+  W <- W.prev*S+R
   return(W)
 }
 
@@ -75,6 +75,8 @@ do.whelk.recruitment <- function(avg.C, avg.B, p, Y, W.prev, B.prev, C.prev) {
   # p is the per capita predation rate
   R <- (avg.C + avg.B)*3*p*Y*W.prev*(B.prev+C.prev)
   if (R > 90) {
+    # note that if the max. recruitment rate is not set, then
+    # whelk recruitment becomes very large very quickly
     R <- 90
   }
   return(R)
@@ -138,7 +140,7 @@ C[1] <- 11000
 #B[1] <- 0
 #C[1] <- 0
 L[1] <- 239
-W[1] <- 10
+W[1] <- 93
 P[1] <- 1
 
 F[1] <- do.free.space.calculation(T=T, B=B[1], size.B=size.B, C=C[1], 
@@ -203,14 +205,13 @@ for (t in 2:timesteps) {
     W.recruits <- 0
   }
   
-  if(month[t] %in% summer) {
-    W.feeding <- (exp(-5.6*p.whelk*(B[t]+C[t]))/(1+exp(-5.6*p.whelk(B[t]+C[t]))))
-  } else {
-    W.feeding <- (exp(-5.6*p.whelk*(B[t]+C[t]))/(1+exp(-5.6*p.whelk(B[t-6]+C[t-6]))))
-
-  }
+  # if(month[t] %in% summer) {
+  #   W.feeding <- (exp(-5.6*p.whelk*(B[t-1]+C[t-1]))) / (1+exp(-5.6*p.whelk*(B[t-1]+C[t-1])))
+  # } else {
+  #   W.feeding <- (exp(-5.6*p.whelk*(B[t-6]+C[t-6]))) / (1+exp(-5.6*p.whelk*(B[t-6]+C[t-6])))
+  # }
   
-  W[t] <- do.population.size.whelks(W.prev=W[t-1], R=W.recruits, S=survival.W, W.feeding=W.feeding)
+  W[t] <- do.population.size.whelks(W.prev=W[t-1], R=W.recruits, S=survival.W)
   
   P[t] <- do.population.size.seastar(S=survival.P, P.prev=P[t-1], R=P.recruits)
   
@@ -230,5 +231,9 @@ par(mfrow=c(1,2))
 plot(W, xlab="Time", ylab="Whelk")
 plot(P, xlab="Time", ylab="Seastars")
 
+quartz(width=6, height=4)
+par(mfrow=c(1,1))
+plot(W, xlab="Time", ylab="Whelk")
+lines(W)
 
 
