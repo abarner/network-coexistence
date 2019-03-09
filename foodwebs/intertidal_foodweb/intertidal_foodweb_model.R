@@ -57,7 +57,10 @@ do.population.size.limpets <- function(S, L.prev, S.r, R, delta) {
   return(L)
 }
 
-do.population.size.whelks <- function(W.prev, R, W.feeding, S) {
+do.population.size.whelks <- function(W.prev, 
+                                      #W.feeding, 
+                                      S, 
+                                      R) {
   # W.prev is whelk population size in the previous month
   # p is per capita predation rate
   # B.prev is the B. glandula population
@@ -65,7 +68,13 @@ do.population.size.whelks <- function(W.prev, R, W.feeding, S) {
   # R is the recruitment rate
   # S is the survival rate
   # W.feeding is food intake
-  W <- W.prev*W.feeding*S+R
+  
+  # note that the functional form of this population model is unclear
+  # from the manuscript. Alternate model forms could be:
+  W <- W.prev * S + R
+  # W <- W.prev * W. feeding + R
+  # W <- W.prev*W.feeding*S + R
+  
   return(W)
 }
 
@@ -205,13 +214,19 @@ for (t in 2:timesteps) {
     W.recruits <- 0
   }
   
-  if(month[t] %in% summer) {
-    W.feeding <- p.whelk*(B[t-1]+C[t-1]) / (1+ (p.whelk*(B[t-1]+C[t-1])))
-  } else {
-    W.feeding <- p.whelk*(B[t-6]+C[t-6]) / (1+ (p.whelk*(B[t-6]+C[t-6])))
-  }
+  ## Include this if using form of whelk population model that depends 
+  ## on barnacle population size
   
-  W[t] <- do.population.size.whelks(W.prev=W[t-1], R=W.recruits, W.feeding = W.feeding, S = survival.W)
+  # if(month[t] %in% summer) {
+  #   W.feeding <- p.whelk*(B[t-1]+C[t-1]) / (1+ (p.whelk*(B[t-1]+C[t-1])))
+  # } else {
+  #   W.feeding <- p.whelk*(B[t-6]+C[t-6]) / (1+ (p.whelk*(B[t-6]+C[t-6])))
+  # }
+  
+  W[t] <- do.population.size.whelks(W.prev=W[t-1],
+                                    #W.feeding = W.feeding, 
+                                    S = survival.W,
+                                    R=W.recruits)
   
   P[t] <- do.population.size.seastar(S=survival.P, P.prev=P[t-1], R=P.recruits)
   
