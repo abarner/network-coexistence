@@ -572,7 +572,7 @@ for (run_loop in 1:runs) {
   C1_final_mechanisms[run_loop,] <- C1_results
   C2_final_mechanisms[run_loop,] <- C2_results
   
-  # print how far we've coeme
+  # print how far we've come
   if(run_loop%%50==0) {
     print(run_loop)
   }
