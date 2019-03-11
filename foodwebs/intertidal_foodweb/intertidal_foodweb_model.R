@@ -94,6 +94,11 @@ do.whelk.recruitment <- function(avg.C, avg.B, p, Y, W.prev, B.prev, C.prev) {
 do.population.size.seastar <- function(S, P.prev, R) {
   # S is seastar adult survival
   # P.prev is previous seastar population size
+  
+  # note that there is a typo in equation 7 in Forde & Doak appendix 
+  # where "P.prev" (= P at time t-1) is incorrectly included as 
+  # P at time t+1
+  
   P <- S*P.prev + survival.recruit.P*R
   if (P > 6) {
     P <- 6
