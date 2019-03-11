@@ -1,6 +1,12 @@
+# Create graph of mechanistic decomposition
 #source("LGS_Vasseur_model.R") # if wanting to run a full set of simulations
 
 # or if wanting to read them in
+C1_final_mechanisms <- read.csv(file = here("foodwebs", "cr_variation_examplecode_files", 
+                                           "mechanism_figs", "C1_final_mechanisms.csv"))
+
+C2_final_mechanisms <- read.csv(file = here("foodwebs", "cr_variation_examplecode_files", 
+                                            "mechanism_figs", "C2_final_mechanisms.csv"))
 
 C1_r_bar <- mean(C1_final_mechanisms[,1])
 C1_delta_0 <- mean(C1_final_mechanisms[,2])

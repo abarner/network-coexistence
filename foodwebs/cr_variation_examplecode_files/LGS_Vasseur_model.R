@@ -2,7 +2,6 @@
 # Compare positive, no, and negative autocorrelation
 # For tree species mortality rates through time (e.g. from Vasseur and Fox appendix)
 
-library(here)
 # ----------------------------------------------------------------------------------------------------
 # Run model with both species to get overall dynamics
 
@@ -580,9 +579,5 @@ for (run_loop in 1:runs) {
 
 }
 
-write.csv(C1_final_mechanisms, file = here("foodwebs", "cr_variation_examplecode_files", 
-                                           "mechanism_figs", "C1_final_mechanisms.csv"), row.names=FALSE)
-write.csv(C2_final_mechanisms, file = here("foodwebs", "cr_variation_examplecode_files", 
-                                           "mechanism_figs", "C2_final_mechanisms.csv"), row.names=FALSE)
 # ----------------------------------------------------------------------------------------------------
 # to plot run plotting_mechanisms.R
