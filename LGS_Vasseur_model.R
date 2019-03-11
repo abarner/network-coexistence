@@ -19,11 +19,6 @@ VassFox_Cvar <- function (Time, State, Pars) {
 }
 
 # ----------------------------------------------------------------------------------------------------
-# starting conditions
-time  <- 5000 # number of timesteps to run the model 
-State <- c(P = 1, C1 = 1, C2 = 1, R = 1) # starting parameters
-
-# ----------------------------------------------------------------------------------------------------
 # parameters
 # resource intrinsic rate of growth
 r = 1.0
@@ -53,551 +48,536 @@ O_C2_R = 0.98
 # strength of env. on mortality rate
 sigma=0.55
 
-# correlation of C1 and C2
-rho=-.75
+# cross-correlation of C1 and C2
+rho=0
 
-
-# Calculate temporal variation in mortality timeseries
-z <- matrix(data = rnorm(n = 2*time, mean = 0, sd = 1), nrow = 2)
-cholesky <- matrix(data = c(sigma^2, ro * (sigma ^2), ro * (sigma ^2), sigma ^2), 
-                   nrow = 2)
-g <- cholesky %*% z
-M_C1_temp <- 0.4 * exp(g[1,])
-M_C2_temp <- 0.2 * exp(g[2,])
-
-results <- matrix(data=NA, nrow=time, ncol=4)
-results[1,] <- State
-
-for (t in 2:time) {
-  M_C1 <- M_C1_temp[t]
-  M_C2 <- M_C2_temp[t]
-  
-  pars <- c(r, K, J_C1, J_C2, J_P, M_C1, M_C2, M_P, R_0_1, R_0_2, C_0, O_P_C1, O_C1_R, O_C2_R, sigma, rho)
-
-  # Udate state variables to output from last timestep
-  State <- c(P = results[t-1,1], C1 = results[t-1,2], C2 = results[t-1,3], R = results[t-1,4])
-  
-  # run ODE solver
-  VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = seq(0,1)), 
-                        events = list(func = eventfun))
-
-  # Update results matrix
-  results[t,] <- c(VF_out[2,2], VF_out[2,3], VF_out[2,4], VF_out[2,5])
-
-}
-
-quartz(width=5, height=5)
-plot(results[,1], type="l", col="black", ylim=c(0,2))
-lines(results[,2], col="blue")
-lines(results[,3], col="purple")
-lines(results[,4], col="green")
-legend("topright", c("predator", "prey 1", "prey 2", "resource"), col=c("black", "blue", "purple", "green"), lty=1, lwd=2)
+time  <- 5000 # number of timesteps to run the model 
 
 # ----------------------------------------------------------------------------------------------------
-# Low density growth rate calculations
+# looping over multiple runs
 
-# C1 as the invader
-State <- c(P = 1, C1 = 0, C2 = 1, R = 1) # starting parameters
+runs <- 5
+C1_final_mechanisms <- matrix(data=NA, nrow=runs, ncol=5)
+C2_final_mechanisms <- matrix(data=NA, nrow=runs, ncol=5)
+colnames(C1_final_mechanisms ) <- c("C1_r_bar", "C1_delta_0", "C1_delta_P", "C1_delta_E", "C1_delta_EP")
+colnames(C2_final_mechanisms ) <- c("C2_r_bar", "C2_delta_0", "C2_delta_P", "C2_delta_E", "C2_delta_EP")
 
-# invasion time
-invade_start_time <- time/2
-
-# Run to equilibrium
-C1_invade_C2_resident <- matrix(data=NA, nrow=time, ncol=4)
-C1_invade_C2_resident[1,] <- State
-
-for (t in 2:time) {
-  M_C1 <- M_C1_temp[t]
-  M_C2 <- M_C2_temp[t]
+for (run_loop in 1:runs) {
   
+  # ----------------------------------------------------------------------------------------------------
+  # starting conditions
+  State <- c(P = 1, C1 = 1, C2 = 1, R = 1) # starting parameters
+  
+  # Calculate temporal variation in mortality timeseries
+  z <- matrix(data = rnorm(n = 2*time, mean = 0, sd = 1), nrow = 2)
+  cholesky <- matrix(data = c(sigma^2, rho * (sigma ^2), rho * (sigma ^2), sigma ^2), 
+                     nrow = 2)
+  g <- cholesky %*% z
+  M_C1_temp <- 0.4 * exp(g[1,])
+  M_C2_temp <- 0.2 * exp(g[2,])
+  
+  results <- matrix(data=NA, nrow=time, ncol=4)
+  results[1,] <- State
+  
+  for (t in 2:time) {
+    M_C1 <- M_C1_temp[t]
+    M_C2 <- M_C2_temp[t]
+    
+    pars <- c(r, K, J_C1, J_C2, J_P, M_C1, M_C2, M_P, R_0_1, R_0_2, C_0, O_P_C1, O_C1_R, O_C2_R, sigma, rho)
+    
+    # Udate state variables to output from last timestep
+    State <- c(P = results[t-1,1], C1 = results[t-1,2], C2 = results[t-1,3], R = results[t-1,4])
+    
+    # run ODE solver
+    VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = seq(0,1)), 
+                            events = list(func = eventfun))
+    
+    # Update results matrix
+    results[t,] <- c(VF_out[2,2], VF_out[2,3], VF_out[2,4], VF_out[2,5])
+    
+  }
+  
+  # quartz(width=5, height=5)
+  # plot(results[,1], type="l", col="black", ylim=c(0,2))
+  # lines(results[,2], col="blue")
+  # lines(results[,3], col="purple")
+  # lines(results[,4], col="green")
+  # legend("topright", c("predator", "prey 1", "prey 2", "resource"), col=c("black", "blue", "purple", "green"), lty=1, lwd=2)
+  
+  # ----------------------------------------------------------------------------------------------------
+  # Low density growth rate calculations
+  
+  # C1 as the invader
+  State <- c(P = 1, C1 = 0, C2 = 1, R = 1) # starting parameters
+  
+  # invasion time
+  invade_start_time <- time/2
+  
+  # Run to equilibrium
+  C1_invade_C2_resident <- matrix(data=NA, nrow=time, ncol=4)
+  C1_invade_C2_resident[1,] <- State
+  
+  for (t in 2:time) {
+    M_C1 <- M_C1_temp[t]
+    M_C2 <- M_C2_temp[t]
+    
+    pars <- c(r, K, J_C1, J_C2, J_P, M_C1, M_C2, M_P, R_0_1, R_0_2, C_0, O_P_C1, O_C1_R, O_C2_R, sigma, rho)
+    
+    # Udate state variables to output from last timestep
+    State <- c(P = C1_invade_C2_resident[t-1,1], C1 = C1_invade_C2_resident[t-1,2], 
+               C2 = C1_invade_C2_resident[t-1,3], R = C1_invade_C2_resident[t-1,4])
+    
+    # run ODE solver
+    VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = seq(0,1)), 
+                            events = list(func = eventfun))
+    
+    # Update results matrix
+    C1_invade_C2_resident[t,] <- c(VF_out[2,2], VF_out[2,3], VF_out[2,4], VF_out[2,5])
+    
+  }
+  
+  # now invade C1
+  C1_ldgr <- matrix(data=NA, nrow=(time-invade_start_time), ncol=1)
+  C2_resident <- matrix(data=NA, nrow=(time-invade_start_time), ncol=1)
+  counter <- 1
+  
+  for (t in invade_start_time:time) {
+    
+    M_C1 <- M_C1_temp[t]
+    M_C2 <- M_C2_temp[t]
+    
+    pars <- c(r, K, J_C1, J_C2, J_P, M_C1, M_C2, M_P, R_0_1, R_0_2, C_0, O_P_C1, O_C1_R, O_C2_R, sigma, rho)
+    
+    # Udate state variables to output from last timestep
+    State <- c(P = C1_invade_C2_resident[t-1,1], C1 = 0.001, 
+               C2 = C1_invade_C2_resident[t-1,3], R = C1_invade_C2_resident[t-1,4])
+    
+    # run ODE solver
+    VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = seq(0,1)), 
+                            events = list(func = eventfun))
+    C1_ldgr[counter] <- log (VF_out[2,3]/.001)
+    C2_resident[counter] <- log (VF_out[2,4]/VF_out[1,4])
+    
+    counter <- counter + 1
+  }
+  
+  # C2 as the invader
+  State <- c(P = 1, C1 = 1, C2 = 0, R = 1) # starting parameters
+  
+  # invasion time
+  invade_start_time <- time/2
+  
+  # Run to equilibrium
+  C2_invade_C1_resident <- matrix(data=NA, nrow=time, ncol=4)
+  C2_invade_C1_resident[1,] <- State
+  
+  for (t in 2:time) {
+    M_C1 <- M_C1_temp[t]
+    M_C2 <- M_C2_temp[t]
+    
+    pars <- c(r, K, J_C1, J_C2, J_P, M_C1, M_C2, M_P, R_0_1, R_0_2, C_0, O_P_C1, O_C1_R, O_C2_R, sigma, rho)
+    
+    # Udate state variables to output from last timestep
+    State <- c(P = C2_invade_C1_resident[t-1,1], C1 = C2_invade_C1_resident[t-1,2], 
+               C2 = C2_invade_C1_resident[t-1,3], R = C2_invade_C1_resident[t-1,4])
+    
+    # run ODE solver
+    VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = seq(0,1)), 
+                            events = list(func = eventfun))
+    
+    # Update results matrix
+    C2_invade_C1_resident[t,] <- c(VF_out[2,2], VF_out[2,3], VF_out[2,4], VF_out[2,5])
+    
+  }
+  
+  # now invade C2
+  C2_ldgr <- matrix(data=NA, nrow=(time-invade_start_time), ncol=1)
+  C1_resident <- matrix(data=NA, nrow=(time-invade_start_time), ncol=1)
+  counter <- 1
+  
+  for (t in invade_start_time:time) {
+    
+    M_C1 <- M_C1_temp[t]
+    M_C2 <- M_C2_temp[t]
+    
+    pars <- c(r, K, J_C1, J_C2, J_P, M_C1, M_C2, M_P, R_0_1, R_0_2, C_0, O_P_C1, O_C1_R, O_C2_R, sigma, rho)
+    
+    # Udate state variables to output from last timestep
+    State <- c(P = C2_invade_C1_resident[t-1,1], C1 = C2_invade_C1_resident[t-1,2], 
+               C2 = .001, R = C2_invade_C1_resident[t-1,4])
+    
+    # run ODE solver
+    VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = seq(0,1)), 
+                            events = list(func = eventfun))
+    C2_ldgr[counter] <- log (VF_out[2,4]/.001)
+    C1_resident[counter] <- log (VF_out[2,3]/VF_out[1,3])
+    
+    counter <- counter + 1
+  }
+  
+  # calculate r_bar
+  C1_r_bar <- mean(C1_ldgr)-mean(C2_resident)
+  C2_r_bar <- mean(C2_ldgr)-mean(C1_resident)
+  
+  # ----------------------------------------------------------------------------------------------------
+  # Partitioning coexistence mechanisms
+  # set up non-fluctuating conditions
+  avg_M_C1 <- mean(M_C1_temp[invade_start_time:time])
+  avg_M_C2 <- mean(M_C2_temp[invade_start_time:time])
+  
+  avg_predator_C1_invade_C2_resident <- mean(C1_invade_C2_resident[invade_start_time:time,1])
+  avg_predator_C2_invade_C1_resident <- mean(C2_invade_C1_resident[invade_start_time:time,1])
+  
+  # ----------------------------------------------------------------------------------------------------
+  # calculate delta_0 
+  
+  # C1 as the invader
+  State <- c(P = avg_predator_C1_invade_C2_resident, C1 = 0, C2 = 1, R = 1) # starting parameters
+  
+  # Run to equilibrium
+  epsilon_0_C1_invade_C2_resident <- matrix(data=NA, nrow=time, ncol=4)
+  epsilon_0_C1_invade_C2_resident[1,] <- State
+  
+  M_C1 <- avg_M_C1 
+  M_C2 <- avg_M_C2 
   pars <- c(r, K, J_C1, J_C2, J_P, M_C1, M_C2, M_P, R_0_1, R_0_2, C_0, O_P_C1, O_C1_R, O_C2_R, sigma, rho)
   
-  # Udate state variables to output from last timestep
-  State <- c(P = C1_invade_C2_resident[t-1,1], C1 = C1_invade_C2_resident[t-1,2], 
-             C2 = C1_invade_C2_resident[t-1,3], R = C1_invade_C2_resident[t-1,4])
+  for (t in 2:time) {
+    
+    # Udate state variables to output from last timestep
+    State <- c(P = avg_predator_C1_invade_C2_resident, C1 = epsilon_0_C1_invade_C2_resident[t-1,2], 
+               C2 = epsilon_0_C1_invade_C2_resident[t-1,3], R = epsilon_0_C1_invade_C2_resident[t-1,4])
+    
+    # run ODE solver
+    VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = seq(0,1)), 
+                            events = list(func = eventfun))
+    
+    # Update results matrix
+    epsilon_0_C1_invade_C2_resident[t,] <- c(avg_predator_C1_invade_C2_resident, VF_out[2,3], VF_out[2,4], VF_out[2,5])
+    
+  }
   
-  # run ODE solver
-  VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = seq(0,1)), 
-                          events = list(func = eventfun))
   
-  # Update results matrix
-  C1_invade_C2_resident[t,] <- c(VF_out[2,2], VF_out[2,3], VF_out[2,4], VF_out[2,5])
+  # now invade C1
+  C1_epsilon_0 <- matrix(data=NA, nrow=(time-invade_start_time), ncol=1)
+  C2_resident_epsilon_0 <- matrix(data=NA, nrow=(time-invade_start_time), ncol=1)
+  counter <- 1
   
-}
-
-# now invade C1
-C1_ldgr <- matrix(data=NA, nrow=(time-invade_start_time), ncol=1)
-C2_resident <- matrix(data=NA, nrow=(time-invade_start_time), ncol=1)
-counter <- 1
-
-for (t in invade_start_time:time) {
-  
-  M_C1 <- M_C1_temp[t]
-  M_C2 <- M_C2_temp[t]
-  
+  M_C1 <- avg_M_C1 
+  M_C2 <- avg_M_C2 
   pars <- c(r, K, J_C1, J_C2, J_P, M_C1, M_C2, M_P, R_0_1, R_0_2, C_0, O_P_C1, O_C1_R, O_C2_R, sigma, rho)
   
-  # Udate state variables to output from last timestep
-  State <- c(P = C1_invade_C2_resident[t-1,1], C1 = 0.001, 
-             C2 = C1_invade_C2_resident[t-1,3], R = C1_invade_C2_resident[t-1,4])
+  for (t in invade_start_time:time) {
+    
+    pars <- c(r, K, J_C1, J_C2, J_P, M_C1, M_C2, M_P, R_0_1, R_0_2, C_0, O_P_C1, O_C1_R, O_C2_R, sigma, rho)
+    
+    # Udate state variables to output from last timestep
+    State <- c(P = epsilon_0_C1_invade_C2_resident[t-1,1], C1 = 0.001, 
+               C2 = epsilon_0_C1_invade_C2_resident[t-1,3], R = epsilon_0_C1_invade_C2_resident[t-1,4])
+    
+    # run ODE solver
+    VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = seq(0,1)), 
+                            events = list(func = eventfun))
+    C1_epsilon_0[counter] <- log (VF_out[2,3]/.001)
+    C2_resident_epsilon_0[counter] <- log (VF_out[2,4]/VF_out[1,4])
+    
+    counter <- counter + 1
+  }
   
-  # run ODE solver
-  VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = seq(0,1)), 
-                          events = list(func = eventfun))
-  C1_ldgr[counter] <- log (VF_out[2,3]/.001)
-  C2_resident[counter] <- log (VF_out[2,4]/VF_out[1,4])
+  # C2 as the invader
+  State <- c(P = avg_predator_C2_invade_C1_resident, C1 = 1, C2 = 0, R = 1) # starting parameters
   
-  counter <- counter + 1
-}
-
-# C2 as the invader
-State <- c(P = 1, C1 = 1, C2 = 0, R = 1) # starting parameters
-
-# invasion time
-invade_start_time <- time/2
-
-# Run to equilibrium
-C2_invade_C1_resident <- matrix(data=NA, nrow=time, ncol=4)
-C2_invade_C1_resident[1,] <- State
-
-for (t in 2:time) {
-  M_C1 <- M_C1_temp[t]
-  M_C2 <- M_C2_temp[t]
+  # Run to equilibrium
+  epsilon_0_C2_invade_C1_resident <- matrix(data=NA, nrow=time, ncol=4)
+  epsilon_0_C2_invade_C1_resident[1,] <- State
   
+  M_C1 <- avg_M_C1 
+  M_C2 <- avg_M_C2 
   pars <- c(r, K, J_C1, J_C2, J_P, M_C1, M_C2, M_P, R_0_1, R_0_2, C_0, O_P_C1, O_C1_R, O_C2_R, sigma, rho)
   
-  # Udate state variables to output from last timestep
-  State <- c(P = C2_invade_C1_resident[t-1,1], C1 = C2_invade_C1_resident[t-1,2], 
-             C2 = C2_invade_C1_resident[t-1,3], R = C2_invade_C1_resident[t-1,4])
+  for (t in 2:time) {
+    
+    # Udate state variables to output from last timestep
+    State <- c(P = avg_predator_C2_invade_C1_resident, C1 = epsilon_0_C2_invade_C1_resident[t-1,2], 
+               C2 = epsilon_0_C2_invade_C1_resident[t-1,3], R = epsilon_0_C2_invade_C1_resident[t-1,4])
+    
+    # run ODE solver
+    VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = seq(0,1)), 
+                            events = list(func = eventfun))
+    
+    # Update results matrix
+    epsilon_0_C2_invade_C1_resident[t,] <- c(avg_predator_C2_invade_C1_resident, VF_out[2,3], VF_out[2,4], VF_out[2,5])
+    
+  }
   
-  # run ODE solver
-  VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = seq(0,1)), 
-                          events = list(func = eventfun))
   
-  # Update results matrix
-  C2_invade_C1_resident[t,] <- c(VF_out[2,2], VF_out[2,3], VF_out[2,4], VF_out[2,5])
+  # now invade C2
+  C2_epsilon_0 <- matrix(data=NA, nrow=(time-invade_start_time), ncol=1)
+  C1_resident_epsilon_0 <- matrix(data=NA, nrow=(time-invade_start_time), ncol=1)
+  counter <- 1
   
-}
-
-# now invade C2
-C2_ldgr <- matrix(data=NA, nrow=(time-invade_start_time), ncol=1)
-C1_resident <- matrix(data=NA, nrow=(time-invade_start_time), ncol=1)
-counter <- 1
-
-for (t in invade_start_time:time) {
-  
-  M_C1 <- M_C1_temp[t]
-  M_C2 <- M_C2_temp[t]
-  
+  M_C1 <- avg_M_C1 
+  M_C2 <- avg_M_C2 
   pars <- c(r, K, J_C1, J_C2, J_P, M_C1, M_C2, M_P, R_0_1, R_0_2, C_0, O_P_C1, O_C1_R, O_C2_R, sigma, rho)
   
-  # Udate state variables to output from last timestep
-  State <- c(P = C2_invade_C1_resident[t-1,1], C1 = C2_invade_C1_resident[t-1,2], 
-             C2 = .001, R = C2_invade_C1_resident[t-1,4])
+  for (t in invade_start_time:time) {
+    
+    # Udate state variables to output from last timestep
+    State <- c(P = epsilon_0_C2_invade_C1_resident[t-1,1], C1 = epsilon_0_C2_invade_C1_resident[t-1,2], 
+               C2 = 0.001, R = epsilon_0_C2_invade_C1_resident[t-1,4])
+    
+    # run ODE solver
+    VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = seq(0,1)), 
+                            events = list(func = eventfun))
+    C2_epsilon_0[counter] <- log (VF_out[2,4]/.001)
+    C1_resident_epsilon_0[counter] <- log (VF_out[2,3]/VF_out[1,3])
+    
+    counter <- counter + 1
+  }
   
-  # run ODE solver
-  VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = seq(0,1)), 
-                          events = list(func = eventfun))
-  C2_ldgr[counter] <- log (VF_out[2,4]/.001)
-  C1_resident[counter] <- log (VF_out[2,3]/VF_out[1,3])
+  C1_delta_0 <- mean(C1_epsilon_0)-mean(C2_resident_epsilon_0)
+  C2_delta_0 <- mean(C2_epsilon_0)-mean(C1_resident_epsilon_0)
   
-  counter <- counter + 1
-}
+  # ----------------------------------------------------------------------------------------------------
+  # calculate delta_E 
+  
+  # C1 as the invader
+  State <- c(P = avg_predator_C1_invade_C2_resident, C1 = 0, C2 = 1, R = 1) # starting parameters
+  
+  # Run to equilibrium
+  epsilon_E_C1_invade_C2_resident <- matrix(data=NA, nrow=time, ncol=4)
+  epsilon_E_C1_invade_C2_resident[1,] <- State
+  
+  for (t in 2:time) {
+    M_C1 <- M_C1_temp[t]
+    M_C2 <- M_C2_temp[t]
+    
+    pars <- c(r, K, J_C1, J_C2, J_P, M_C1, M_C2, M_P, R_0_1, R_0_2, C_0, O_P_C1, O_C1_R, O_C2_R, sigma, rho)
+    
+    # Udate state variables to output from last timestep
+    State <- c(P = avg_predator_C1_invade_C2_resident, C1 = epsilon_E_C1_invade_C2_resident[t-1,2], 
+               C2 = epsilon_E_C1_invade_C2_resident[t-1,3], R = epsilon_E_C1_invade_C2_resident[t-1,4])
+    
+    # run ODE solver
+    VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = seq(0,1)), 
+                            events = list(func = eventfun))
+    
+    # Update results matrix
+    epsilon_E_C1_invade_C2_resident[t,] <- c(avg_predator_C1_invade_C2_resident, VF_out[2,3], VF_out[2,4], VF_out[2,5])
+    
+  }
+  
+  
+  # now invade C1
+  C1_epsilon_E <- matrix(data=NA, nrow=(time-invade_start_time), ncol=1)
+  C2_resident_epsilon_E <- matrix(data=NA, nrow=(time-invade_start_time), ncol=1)
+  counter <- 1
+  
+  for (t in invade_start_time:time) {
+    
+    M_C1 <- M_C1_temp[t]
+    M_C2 <- M_C2_temp[t]
+    
+    pars <- c(r, K, J_C1, J_C2, J_P, M_C1, M_C2, M_P, R_0_1, R_0_2, C_0, O_P_C1, O_C1_R, O_C2_R, sigma, rho)
+    
+    # Udate state variables to output from last timestep
+    State <- c(P = epsilon_E_C1_invade_C2_resident[t-1,1], C1 = 0.001, 
+               C2 = epsilon_E_C1_invade_C2_resident[t-1,3], R = epsilon_E_C1_invade_C2_resident[t-1,4])
+    
+    # run ODE solver
+    VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = seq(0,1)), 
+                            events = list(func = eventfun))
+    C1_epsilon_E[counter] <- log (VF_out[2,3]/.001)
+    C2_resident_epsilon_E[counter] <- log (VF_out[2,4]/VF_out[1,4])
+    
+    counter <- counter + 1
+  }
+  
+  # C2 as the invader
+  State <- c(P = avg_predator_C2_invade_C1_resident, C1 = 1, C2 = 0, R = 1) # starting parameters
+  
+  # Run to equilibrium
+  epsilon_E_C2_invade_C1_resident <- matrix(data=NA, nrow=time, ncol=4)
+  epsilon_E_C2_invade_C1_resident[1,] <- State
+  
+  for (t in 2:time) {
+    
+    M_C1 <- M_C1_temp[t]
+    M_C2 <- M_C2_temp[t]
+    
+    pars <- c(r, K, J_C1, J_C2, J_P, M_C1, M_C2, M_P, R_0_1, R_0_2, C_0, O_P_C1, O_C1_R, O_C2_R, sigma, rho)
+    
+    # Udate state variables to output from last timestep
+    State <- c(P = avg_predator_C2_invade_C1_resident, C1 = epsilon_E_C2_invade_C1_resident[t-1,2], 
+               C2 = epsilon_E_C2_invade_C1_resident[t-1,3], R = epsilon_E_C2_invade_C1_resident[t-1,4])
+    
+    # run ODE solver
+    VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = seq(0,1)), 
+                            events = list(func = eventfun))
+    
+    # Update results matrix
+    epsilon_E_C2_invade_C1_resident[t,] <- c(avg_predator_C2_invade_C1_resident, VF_out[2,3], VF_out[2,4], VF_out[2,5])
+    
+  }
+  
+  
+  # now invade C2
+  C2_epsilon_E <- matrix(data=NA, nrow=(time-invade_start_time), ncol=1)
+  C1_resident_epsilon_E <- matrix(data=NA, nrow=(time-invade_start_time), ncol=1)
+  counter <- 1
+  
+  for (t in invade_start_time:time) {
+    
+    M_C1 <- M_C1_temp[t]
+    M_C2 <- M_C2_temp[t]
+    
+    pars <- c(r, K, J_C1, J_C2, J_P, M_C1, M_C2, M_P, R_0_1, R_0_2, C_0, O_P_C1, O_C1_R, O_C2_R, sigma, rho)
+    
+    
+    # Udate state variables to output from last timestep
+    State <- c(P = epsilon_E_C2_invade_C1_resident[t-1,1], C1 = epsilon_E_C2_invade_C1_resident[t-1,2], 
+               C2 = 0.001, R = epsilon_E_C2_invade_C1_resident[t-1,4])
+    
+    # run ODE solver
+    VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = seq(0,1)), 
+                            events = list(func = eventfun))
+    C2_epsilon_E[counter] <- log (VF_out[2,4]/.001)
+    C1_resident_epsilon_E[counter] <- log (VF_out[2,3]/VF_out[1,3])
+    
+    counter <- counter + 1
+  }
+  
+  C1_delta_E <- mean(C1_epsilon_E)-mean(C2_resident_epsilon_E) - C1_delta_0
+  C2_delta_E <- mean(C2_epsilon_E)-mean(C1_resident_epsilon_E) - C2_delta_0
+  
+  # ----------------------------------------------------------------------------------------------------
+  # calculate delta_P 
+  # predator population size varies, but mortality remains constant
+  
+  # C1 as the invader
+  State <- c(P = 1, C1 = 0, C2 = 1, R = 1) # starting parameters
+  
+  # Run to equilibrium
+  epsilon_P_C1_invade_C2_resident <- matrix(data=NA, nrow=time, ncol=4)
+  epsilon_P_C1_invade_C2_resident[1,] <- State
+  
+  M_C1 <- avg_M_C1 
+  M_C2 <- avg_M_C2 
+  pars <- c(r, K, J_C1, J_C2, J_P, M_C1, M_C2, M_P, R_0_1, R_0_2, C_0, O_P_C1, O_C1_R, O_C2_R, sigma, rho)
+  
+  for (t in 2:time) {
+    
+    # Udate state variables to output from last timestep
+    State <- c(P = epsilon_P_C1_invade_C2_resident[t-1,1], C1 = epsilon_P_C1_invade_C2_resident[t-1,2], 
+               C2 = epsilon_P_C1_invade_C2_resident[t-1,3], R = epsilon_P_C1_invade_C2_resident[t-1,4])
+    
+    # run ODE solver
+    VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = seq(0,1)), 
+                            events = list(func = eventfun))
+    
+    # Update results matrix
+    epsilon_P_C1_invade_C2_resident[t,] <- c(VF_out[2,2], VF_out[2,3], VF_out[2,4], VF_out[2,5])
+    
+  }
+  
+  
+  # now invade C1
+  C1_epsilon_P <- matrix(data=NA, nrow=(time-invade_start_time), ncol=1)
+  C2_resident_epsilon_P <- matrix(data=NA, nrow=(time-invade_start_time), ncol=1)
+  counter <- 1
+  
+  M_C1 <- avg_M_C1 
+  M_C2 <- avg_M_C2 
+  pars <- c(r, K, J_C1, J_C2, J_P, M_C1, M_C2, M_P, R_0_1, R_0_2, C_0, O_P_C1, O_C1_R, O_C2_R, sigma, rho)
+  
+  for (t in invade_start_time:time) {
+    
+    # Udate state variables to output from last timestep
+    State <- c(P = epsilon_P_C1_invade_C2_resident[t-1,1], C1 = 0.001, 
+               C2 = epsilon_P_C1_invade_C2_resident[t-1,3], R = epsilon_P_C1_invade_C2_resident[t-1,4])
+    
+    # run ODE solver
+    VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = seq(0,1)), 
+                            events = list(func = eventfun))
+    C1_epsilon_P[counter] <- log (VF_out[2,3]/.001)
+    C2_resident_epsilon_P[counter] <- log (VF_out[2,4]/VF_out[1,4])
+    
+    counter <- counter + 1
+  }
+  
+  # C2 as the invader
+  State <- c(P = 1, C1 = 1, C2 = 0, R = 1) # starting parameters
+  
+  # Run to equilibrium
+  epsilon_P_C2_invade_C1_resident <- matrix(data=NA, nrow=time, ncol=4)
+  epsilon_P_C2_invade_C1_resident[1,] <- State
+  
+  M_C1 <- avg_M_C1 
+  M_C2 <- avg_M_C2 
+  pars <- c(r, K, J_C1, J_C2, J_P, M_C1, M_C2, M_P, R_0_1, R_0_2, C_0, O_P_C1, O_C1_R, O_C2_R, sigma, rho)
+  
+  for (t in 2:time) {
+    
+    # Udate state variables to output from last timestep
+    State <- c(P = epsilon_P_C2_invade_C1_resident[t-1,1], C1 = epsilon_P_C2_invade_C1_resident[t-1,2], 
+               C2 = epsilon_P_C2_invade_C1_resident[t-1,3], R = epsilon_P_C2_invade_C1_resident[t-1,4])
+    
+    # run ODE solver
+    VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = seq(0,1)), 
+                            events = list(func = eventfun))
+    
+    # Update results matrix
+    epsilon_P_C2_invade_C1_resident[t,] <- c(VF_out[2,2], VF_out[2,3], VF_out[2,4], VF_out[2,5])
+    
+  }
+  
+  
+  # now invade C2
+  C2_epsilon_P <- matrix(data=NA, nrow=(time-invade_start_time), ncol=1)
+  C1_resident_epsilon_P <- matrix(data=NA, nrow=(time-invade_start_time), ncol=1)
+  counter <- 1
+  
+  M_C1 <- avg_M_C1 
+  M_C2 <- avg_M_C2 
+  pars <- c(r, K, J_C1, J_C2, J_P, M_C1, M_C2, M_P, R_0_1, R_0_2, C_0, O_P_C1, O_C1_R, O_C2_R, sigma, rho)
+  
+  for (t in invade_start_time:time) {
+    
+    # Udate state variables to output from last timestep
+    State <- c(P = epsilon_P_C2_invade_C1_resident[t-1,1], C1 = epsilon_P_C2_invade_C1_resident[t-1,2], 
+               C2 = 0.001, R = epsilon_P_C2_invade_C1_resident[t-1,4])
+    
+    # run ODE solver
+    VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = seq(0,1)), 
+                            events = list(func = eventfun))
+    C2_epsilon_P[counter] <- log (VF_out[2,4]/.001)
+    C1_resident_epsilon_P[counter] <- log (VF_out[2,3]/VF_out[1,3])
+    
+    counter <- counter + 1
+  }
+  
+  C1_delta_P <- mean(C1_epsilon_P)-mean(C2_resident_epsilon_P) - C1_delta_0
+  C2_delta_P <- mean(C2_epsilon_P)-mean(C1_resident_epsilon_P) - C2_delta_0
+  
+  # ----------------------------------------------------------------------------------------------------
+  # calculate delta_EP 
+  C1_delta_EP <- C1_r_bar - (C1_delta_0 + C1_delta_P + C1_delta_E)
+  C2_delta_EP <- C2_r_bar - (C2_delta_0 + C2_delta_P + C2_delta_E)
+  
+  # ----------------------------------------------------------------------------------------------------
+  # Update final results vector
+  C1_results <- c(C1_r_bar, C1_delta_0, C1_delta_P, C1_delta_E, C1_delta_EP)
+  C2_results <- c(C2_r_bar, C2_delta_0, C2_delta_P, C2_delta_E, C2_delta_EP)
+  
+  C1_final_mechanisms[run_loop,] <- C1_results
+  C2_final_mechanisms[run_loop,] <- C2_results
+  
+  # print how far we've coeme
+  if(run_loop%%50==0) {
+    print(run_loop)
+  }
 
-# calculate r_bar
-C1_r_bar <- mean(C1_ldgr)-mean(C2_resident)
-C2_r_bar <- mean(C2_ldgr)-mean(C1_resident)
+}
 
 # ----------------------------------------------------------------------------------------------------
-# Partitioning coexistence mechanisms
-# set up non-fluctuating conditions
-avg_M_C1 <- mean(M_C1_temp[invade_start_time:time])
-avg_M_C2 <- mean(M_C2_temp[invade_start_time:time])
-
-avg_predator_C1_invade_C2_resident <- mean(C1_invade_C2_resident[invade_start_time:time,1])
-avg_predator_C2_invade_C1_resident <- mean(C2_invade_C1_resident[invade_start_time:time,1])
-
-# ----------------------------------------------------------------------------------------------------
-# calculate delta_0 
-
-# C1 as the invader
-State <- c(P = avg_predator_C1_invade_C2_resident, C1 = 0, C2 = 1, R = 1) # starting parameters
-
-# Run to equilibrium
-epsilon_0_C1_invade_C2_resident <- matrix(data=NA, nrow=time, ncol=4)
-epsilon_0_C1_invade_C2_resident[1,] <- State
-
-M_C1 <- avg_M_C1 
-M_C2 <- avg_M_C2 
-pars <- c(r, K, J_C1, J_C2, J_P, M_C1, M_C2, M_P, R_0_1, R_0_2, C_0, O_P_C1, O_C1_R, O_C2_R, sigma, rho)
-
-for (t in 2:time) {
-  
-  # Udate state variables to output from last timestep
-  State <- c(P = avg_predator_C1_invade_C2_resident, C1 = epsilon_0_C1_invade_C2_resident[t-1,2], 
-             C2 = epsilon_0_C1_invade_C2_resident[t-1,3], R = epsilon_0_C1_invade_C2_resident[t-1,4])
-  
-  # run ODE solver
-  VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = seq(0,1)), 
-                          events = list(func = eventfun))
-  
-  # Update results matrix
-  epsilon_0_C1_invade_C2_resident[t,] <- c(avg_predator_C1_invade_C2_resident, VF_out[2,3], VF_out[2,4], VF_out[2,5])
-  
-}
-
-
-# now invade C1
-C1_epsilon_0 <- matrix(data=NA, nrow=(time-invade_start_time), ncol=1)
-C2_resident_epsilon_0 <- matrix(data=NA, nrow=(time-invade_start_time), ncol=1)
-counter <- 1
-
-M_C1 <- avg_M_C1 
-M_C2 <- avg_M_C2 
-pars <- c(r, K, J_C1, J_C2, J_P, M_C1, M_C2, M_P, R_0_1, R_0_2, C_0, O_P_C1, O_C1_R, O_C2_R, sigma, rho)
-
-for (t in invade_start_time:time) {
-  
-  pars <- c(r, K, J_C1, J_C2, J_P, M_C1, M_C2, M_P, R_0_1, R_0_2, C_0, O_P_C1, O_C1_R, O_C2_R, sigma, rho)
-  
-  # Udate state variables to output from last timestep
-  State <- c(P = epsilon_0_C1_invade_C2_resident[t-1,1], C1 = 0.001, 
-             C2 = epsilon_0_C1_invade_C2_resident[t-1,3], R = epsilon_0_C1_invade_C2_resident[t-1,4])
-  
-  # run ODE solver
-  VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = seq(0,1)), 
-                          events = list(func = eventfun))
-  C1_epsilon_0[counter] <- log (VF_out[2,3]/.001)
-  C2_resident_epsilon_0[counter] <- log (VF_out[2,4]/VF_out[1,4])
-  
-  counter <- counter + 1
-}
-
-# C2 as the invader
-State <- c(P = avg_predator_C2_invade_C1_resident, C1 = 1, C2 = 0, R = 1) # starting parameters
-
-# Run to equilibrium
-epsilon_0_C2_invade_C1_resident <- matrix(data=NA, nrow=time, ncol=4)
-epsilon_0_C2_invade_C1_resident[1,] <- State
-
-M_C1 <- avg_M_C1 
-M_C2 <- avg_M_C2 
-pars <- c(r, K, J_C1, J_C2, J_P, M_C1, M_C2, M_P, R_0_1, R_0_2, C_0, O_P_C1, O_C1_R, O_C2_R, sigma, rho)
-
-for (t in 2:time) {
-  
-  # Udate state variables to output from last timestep
-  State <- c(P = avg_predator_C2_invade_C1_resident, C1 = epsilon_0_C2_invade_C1_resident[t-1,2], 
-             C2 = epsilon_0_C2_invade_C1_resident[t-1,3], R = epsilon_0_C2_invade_C1_resident[t-1,4])
-  
-  # run ODE solver
-  VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = seq(0,1)), 
-                          events = list(func = eventfun))
-  
-  # Update results matrix
-  epsilon_0_C2_invade_C1_resident[t,] <- c(avg_predator_C2_invade_C1_resident, VF_out[2,3], VF_out[2,4], VF_out[2,5])
-  
-}
-
-
-# now invade C2
-C2_epsilon_0 <- matrix(data=NA, nrow=(time-invade_start_time), ncol=1)
-C1_resident_epsilon_0 <- matrix(data=NA, nrow=(time-invade_start_time), ncol=1)
-counter <- 1
-
-M_C1 <- avg_M_C1 
-M_C2 <- avg_M_C2 
-pars <- c(r, K, J_C1, J_C2, J_P, M_C1, M_C2, M_P, R_0_1, R_0_2, C_0, O_P_C1, O_C1_R, O_C2_R, sigma, rho)
-
-for (t in invade_start_time:time) {
-  
-  # Udate state variables to output from last timestep
-  State <- c(P = epsilon_0_C2_invade_C1_resident[t-1,1], C1 = epsilon_0_C2_invade_C1_resident[t-1,2], 
-             C2 = 0.001, R = epsilon_0_C2_invade_C1_resident[t-1,4])
-  
-  # run ODE solver
-  VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = seq(0,1)), 
-                          events = list(func = eventfun))
-  C2_epsilon_0[counter] <- log (VF_out[2,4]/.001)
-  C1_resident_epsilon_0[counter] <- log (VF_out[2,3]/VF_out[1,3])
-  
-  counter <- counter + 1
-}
-
-C1_delta_0 <- mean(C1_epsilon_0)-mean(C2_resident_epsilon_0)
-C2_delta_0 <- mean(C2_epsilon_0)-mean(C1_resident_epsilon_0)
-
-# ----------------------------------------------------------------------------------------------------
-# calculate delta_E 
-
-# C1 as the invader
-State <- c(P = avg_predator_C1_invade_C2_resident, C1 = 0, C2 = 1, R = 1) # starting parameters
-
-# Run to equilibrium
-epsilon_E_C1_invade_C2_resident <- matrix(data=NA, nrow=time, ncol=4)
-epsilon_E_C1_invade_C2_resident[1,] <- State
-
-for (t in 2:time) {
-  M_C1 <- M_C1_temp[t]
-  M_C2 <- M_C2_temp[t]
-  
-  pars <- c(r, K, J_C1, J_C2, J_P, M_C1, M_C2, M_P, R_0_1, R_0_2, C_0, O_P_C1, O_C1_R, O_C2_R, sigma, rho)
-  
-  # Udate state variables to output from last timestep
-  State <- c(P = avg_predator_C1_invade_C2_resident, C1 = epsilon_E_C1_invade_C2_resident[t-1,2], 
-             C2 = epsilon_E_C1_invade_C2_resident[t-1,3], R = epsilon_E_C1_invade_C2_resident[t-1,4])
-  
-  # run ODE solver
-  VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = seq(0,1)), 
-                          events = list(func = eventfun))
-  
-  # Update results matrix
-  epsilon_E_C1_invade_C2_resident[t,] <- c(avg_predator_C1_invade_C2_resident, VF_out[2,3], VF_out[2,4], VF_out[2,5])
-  
-}
-
-
-# now invade C1
-C1_epsilon_E <- matrix(data=NA, nrow=(time-invade_start_time), ncol=1)
-C2_resident_epsilon_E <- matrix(data=NA, nrow=(time-invade_start_time), ncol=1)
-counter <- 1
-
-for (t in invade_start_time:time) {
-  
-  M_C1 <- M_C1_temp[t]
-  M_C2 <- M_C2_temp[t]
-  
-  pars <- c(r, K, J_C1, J_C2, J_P, M_C1, M_C2, M_P, R_0_1, R_0_2, C_0, O_P_C1, O_C1_R, O_C2_R, sigma, rho)
-  
-  # Udate state variables to output from last timestep
-  State <- c(P = epsilon_E_C1_invade_C2_resident[t-1,1], C1 = 0.001, 
-             C2 = epsilon_E_C1_invade_C2_resident[t-1,3], R = epsilon_E_C1_invade_C2_resident[t-1,4])
-  
-  # run ODE solver
-  VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = seq(0,1)), 
-                          events = list(func = eventfun))
-  C1_epsilon_E[counter] <- log (VF_out[2,3]/.001)
-  C2_resident_epsilon_E[counter] <- log (VF_out[2,4]/VF_out[1,4])
-  
-  counter <- counter + 1
-}
-
-# C2 as the invader
-State <- c(P = avg_predator_C2_invade_C1_resident, C1 = 1, C2 = 0, R = 1) # starting parameters
-
-# Run to equilibrium
-epsilon_E_C2_invade_C1_resident <- matrix(data=NA, nrow=time, ncol=4)
-epsilon_E_C2_invade_C1_resident[1,] <- State
-
-for (t in 2:time) {
-  
-  M_C1 <- M_C1_temp[t]
-  M_C2 <- M_C2_temp[t]
-  
-  pars <- c(r, K, J_C1, J_C2, J_P, M_C1, M_C2, M_P, R_0_1, R_0_2, C_0, O_P_C1, O_C1_R, O_C2_R, sigma, rho)
-  
-  # Udate state variables to output from last timestep
-  State <- c(P = avg_predator_C2_invade_C1_resident, C1 = epsilon_E_C2_invade_C1_resident[t-1,2], 
-             C2 = epsilon_E_C2_invade_C1_resident[t-1,3], R = epsilon_E_C2_invade_C1_resident[t-1,4])
-  
-  # run ODE solver
-  VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = seq(0,1)), 
-                          events = list(func = eventfun))
-  
-  # Update results matrix
-  epsilon_E_C2_invade_C1_resident[t,] <- c(avg_predator_C2_invade_C1_resident, VF_out[2,3], VF_out[2,4], VF_out[2,5])
-  
-}
-
-
-# now invade C2
-C2_epsilon_E <- matrix(data=NA, nrow=(time-invade_start_time), ncol=1)
-C1_resident_epsilon_E <- matrix(data=NA, nrow=(time-invade_start_time), ncol=1)
-counter <- 1
-
-for (t in invade_start_time:time) {
-  
-  M_C1 <- M_C1_temp[t]
-  M_C2 <- M_C2_temp[t]
-  
-  pars <- c(r, K, J_C1, J_C2, J_P, M_C1, M_C2, M_P, R_0_1, R_0_2, C_0, O_P_C1, O_C1_R, O_C2_R, sigma, rho)
-  
-  
-  # Udate state variables to output from last timestep
-  State <- c(P = epsilon_E_C2_invade_C1_resident[t-1,1], C1 = epsilon_E_C2_invade_C1_resident[t-1,2], 
-             C2 = 0.001, R = epsilon_E_C2_invade_C1_resident[t-1,4])
-  
-  # run ODE solver
-  VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = seq(0,1)), 
-                          events = list(func = eventfun))
-  C2_epsilon_E[counter] <- log (VF_out[2,4]/.001)
-  C1_resident_epsilon_E[counter] <- log (VF_out[2,3]/VF_out[1,3])
-  
-  counter <- counter + 1
-}
-
-C1_delta_E <- mean(C1_epsilon_E)-mean(C2_resident_epsilon_E) - C1_delta_0
-C2_delta_E <- mean(C2_epsilon_E)-mean(C1_resident_epsilon_E) - C2_delta_0
-
-# ----------------------------------------------------------------------------------------------------
-# calculate delta_P 
-# predator population size varies, but mortality remains constant
-
-# C1 as the invader
-State <- c(P = 1, C1 = 0, C2 = 1, R = 1) # starting parameters
-
-# Run to equilibrium
-epsilon_P_C1_invade_C2_resident <- matrix(data=NA, nrow=time, ncol=4)
-epsilon_P_C1_invade_C2_resident[1,] <- State
-
-M_C1 <- avg_M_C1 
-M_C2 <- avg_M_C2 
-pars <- c(r, K, J_C1, J_C2, J_P, M_C1, M_C2, M_P, R_0_1, R_0_2, C_0, O_P_C1, O_C1_R, O_C2_R, sigma, rho)
-
-for (t in 2:time) {
-  
-  # Udate state variables to output from last timestep
-  State <- c(P = epsilon_P_C1_invade_C2_resident[t-1,1], C1 = epsilon_P_C1_invade_C2_resident[t-1,2], 
-             C2 = epsilon_P_C1_invade_C2_resident[t-1,3], R = epsilon_P_C1_invade_C2_resident[t-1,4])
-  
-  # run ODE solver
-  VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = seq(0,1)), 
-                          events = list(func = eventfun))
-  
-  # Update results matrix
-  epsilon_P_C1_invade_C2_resident[t,] <- c(VF_out[2,2], VF_out[2,3], VF_out[2,4], VF_out[2,5])
-  
-}
-
-
-# now invade C1
-C1_epsilon_P <- matrix(data=NA, nrow=(time-invade_start_time), ncol=1)
-C2_resident_epsilon_P <- matrix(data=NA, nrow=(time-invade_start_time), ncol=1)
-counter <- 1
-
-M_C1 <- avg_M_C1 
-M_C2 <- avg_M_C2 
-pars <- c(r, K, J_C1, J_C2, J_P, M_C1, M_C2, M_P, R_0_1, R_0_2, C_0, O_P_C1, O_C1_R, O_C2_R, sigma, rho)
-
-for (t in invade_start_time:time) {
-
-  # Udate state variables to output from last timestep
-  State <- c(P = epsilon_P_C1_invade_C2_resident[t-1,1], C1 = 0.001, 
-             C2 = epsilon_P_C1_invade_C2_resident[t-1,3], R = epsilon_P_C1_invade_C2_resident[t-1,4])
-  
-  # run ODE solver
-  VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = seq(0,1)), 
-                          events = list(func = eventfun))
-  C1_epsilon_P[counter] <- log (VF_out[2,3]/.001)
-  C2_resident_epsilon_P[counter] <- log (VF_out[2,4]/VF_out[1,4])
-  
-  counter <- counter + 1
-}
-
-# C2 as the invader
-State <- c(P = 1, C1 = 1, C2 = 0, R = 1) # starting parameters
-
-# Run to equilibrium
-epsilon_P_C2_invade_C1_resident <- matrix(data=NA, nrow=time, ncol=4)
-epsilon_P_C2_invade_C1_resident[1,] <- State
-
-M_C1 <- avg_M_C1 
-M_C2 <- avg_M_C2 
-pars <- c(r, K, J_C1, J_C2, J_P, M_C1, M_C2, M_P, R_0_1, R_0_2, C_0, O_P_C1, O_C1_R, O_C2_R, sigma, rho)
-
-for (t in 2:time) {
-  
-  # Udate state variables to output from last timestep
-  State <- c(P = epsilon_P_C2_invade_C1_resident[t-1,1], C1 = epsilon_P_C2_invade_C1_resident[t-1,2], 
-             C2 = epsilon_P_C2_invade_C1_resident[t-1,3], R = epsilon_P_C2_invade_C1_resident[t-1,4])
-  
-  # run ODE solver
-  VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = seq(0,1)), 
-                          events = list(func = eventfun))
-  
-  # Update results matrix
-  epsilon_P_C2_invade_C1_resident[t,] <- c(VF_out[2,2], VF_out[2,3], VF_out[2,4], VF_out[2,5])
-  
-}
-
-
-# now invade C2
-C2_epsilon_P <- matrix(data=NA, nrow=(time-invade_start_time), ncol=1)
-C1_resident_epsilon_P <- matrix(data=NA, nrow=(time-invade_start_time), ncol=1)
-counter <- 1
-
-M_C1 <- avg_M_C1 
-M_C2 <- avg_M_C2 
-pars <- c(r, K, J_C1, J_C2, J_P, M_C1, M_C2, M_P, R_0_1, R_0_2, C_0, O_P_C1, O_C1_R, O_C2_R, sigma, rho)
-
-for (t in invade_start_time:time) {
-  
-  # Udate state variables to output from last timestep
-  State <- c(P = epsilon_P_C2_invade_C1_resident[t-1,1], C1 = epsilon_P_C2_invade_C1_resident[t-1,2], 
-             C2 = 0.001, R = epsilon_P_C2_invade_C1_resident[t-1,4])
-  
-  # run ODE solver
-  VF_out <- as.data.frame(ode(func = VassFox_Cvar, y = State, parms = pars, times = seq(0,1)), 
-                          events = list(func = eventfun))
-  C2_epsilon_P[counter] <- log (VF_out[2,4]/.001)
-  C1_resident_epsilon_P[counter] <- log (VF_out[2,3]/VF_out[1,3])
-  
-  counter <- counter + 1
-}
-
-C1_delta_P <- mean(C1_epsilon_P)-mean(C2_resident_epsilon_P) - C1_delta_0
-C2_delta_P <- mean(C2_epsilon_P)-mean(C1_resident_epsilon_P) - C2_delta_0
-
-# ----------------------------------------------------------------------------------------------------
-# calculate delta_EP 
-C1_delta_EP <- C1_r_bar - (C1_delta_0 + C1_delta_P + C1_delta_E)
-C2_delta_EP <- C2_r_bar - (C2_delta_0 + C2_delta_P + C2_delta_E)
-
-# ----------------------------------------------------------------------------------------------------
-# Plot results
-library(tidyverse)
-
-C1_results <- c(C1_r_bar, C1_delta_0, C1_delta_P, C1_delta_E, C1_delta_EP)
-C2_results <- c(C2_r_bar, C2_delta_0, C2_delta_P, C2_delta_E, C2_delta_EP)
-
-# double check ... works
-#C1_delta_P + C1_delta_E + C1_delta_EP + C1_delta_0
-#C2_delta_P + C2_delta_E + C2_delta_EP + C2_delta_0
-
-params <- c("a", "b", "c", "d", "e")
-
-dat <- as.data.frame(t(rbind(params, C1_results, C2_results)))
-
-dat2 <- dat %>%
-  gather(species, value, C1_results:C2_results) %>%
-  mutate(value = as.numeric(value)) %>%
-  mutate(mycol = ifelse(params == "a", "a", "b"))
-
-
-quartz(width=5, height=5)
-p <- ggplot(dat2, aes(x=params, y=value, fill = mycol)) + geom_bar(stat = "identity") + 
-  facet_wrap(~species) + 
-  scale_x_discrete("Parameters", labels = c("a" = expression(bar("r")[i]-bar("r")[r]) ,
-                                            "b" = expression(bar(Delta)[i]^0),
-                                            "c" = expression(bar(Delta)[i]^P),
-                                            "d" = expression(bar(Delta)[i]^E),
-                                            "e" = expression(bar(Delta)[i]^{E*P}))) +
-  theme_bw() + 
-  theme(legend.position = "none", strip.background = element_blank(), 
-        text = element_text(size = 16), 
-        strip.text.x = element_text(size = 16, face = "italic"), strip.text.y = element_text(size = 16),
-        panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        axis.text.x = element_text(size = 20)) +
-  scale_fill_manual(values = c( "grey40", "grey70")) + 
-  ylab("Partitioning of growth rate when rare") + geom_hline(yintercept = 0)
-
-
-# add panel labels
-g <- ggplotGrob(p)
-#Use grid.text
-
-p
-grid.text(c("(a)", "(b)"), x = c(0.495,.95),
-          y = c(.15,.15),
-          gp=gpar(fontsize=16))
-# dev.off()
+# to plot run plotting_mechanisms.R
