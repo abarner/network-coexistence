@@ -35,16 +35,16 @@ do.actual.recruitment <- function(F, L, L.B, size.B, L.C, size.C, L.L, size.L) {
   return(R)
 }
 
-do.population.size.barnacles <- function(S, p.whelk, W.prev, X.prev, S.r, R, p.star, S.prev) {
+do.population.size.barnacles <- function(S, p.whelk, W.prev, X.prev, S.r, R, p.star, P.prev) {
   # S is survivorship (before whelk predation)
   # p.whelk is the encounter rate of barnacles by whelks
   # W.prev is the whelk population size in the previous month
   # X.prev is the barnacle population size in the previous month
   # S.r is the survivorship of recruits
   # R is the number of recruits
-  # p.star is the encounter rate of barnacles by whelks
-  # S.prev is the whelk population size in the previous month
-  X <- S*(1-p.whelk*W.prev-p.star*S.prev)*X.prev + S.r*R
+  # p.star is the encounter rate of barnacles by sea stars
+  # P.prev is the whelk population size in the previous month
+  X <- S*(1-p.whelk*W.prev-p.star*P.prev)*X.prev + S.r*R
   return (X)
 }
 
@@ -207,9 +207,9 @@ for (t in 2:timesteps) {
   if (L.potential.recruits > L.recruits) {L.recruits <- L.potential.recruits}
   
   B[t] <- do.population.size.barnacles(S=survival.B, p.whelk=p.whelk, W.prev = W[t-1], X.prev=B[t-1],
-                                       S.r = survival.recruit.B, R=B.recruits, p.star=p.seastar, S.prev=P[t-1])
+                                       S.r = survival.recruit.B, R=B.recruits, p.star=p.seastar, P.prev=P[t-1])
   C[t] <- do.population.size.barnacles(S=survival.C, p.whelk=p.whelk, W.prev = W[t-1], X.prev=C[t-1],
-                                       S.r = survival.recruit.C, R=C.recruits, p.star=p.seastar, S.prev=P[t-1])
+                                       S.r = survival.recruit.C, R=C.recruits, p.star=p.seastar, P.prev=P[t-1])
   L[t] <- do.population.size.limpets(S=survival.L, L.prev=L[t-1], S.r=survival.recruit.L, R=L.recruits, delta=delta)
   
   if(month[t] == "Jun") {
