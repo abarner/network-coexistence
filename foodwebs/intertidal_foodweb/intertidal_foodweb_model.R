@@ -241,6 +241,7 @@ for (t in 2:timesteps) {
 
 }
 
+## plot results in base R
 quartz(width=8, height=4)
 par(mfrow=c(1,3))
 plot(B, xlab="Time", ylab="B. glandula")
@@ -253,5 +254,22 @@ plot(W, xlab="Time", ylab="Whelk")
 plot(P, xlab="Time", ylab="Seastars")
 plot(F, xlab = "Time", ylab = "Free Space")
 
+## plot ggplot results
+library(tidyverse)
+fd_results <- tibble(time = seq(1:length(B)),
+                     balanus_glandula = B,
+                     chthamalus_dalli = C,
+                     limpets = L,
+                     whelks = W,
+                     pisaster_ochraceus = P,
+                     free_space = F)
+plot.new()
+fd_results %>%
+  gather(balanus_glandula:free_space, key = "species", 
+         value = "abundance") %>%
+  ggplot(aes(x = time, y = abundance)) +
+  geom_point(size = 0.5) +
+  geom_line() + 
+  facet_wrap(~species, scales = "free")
 
 

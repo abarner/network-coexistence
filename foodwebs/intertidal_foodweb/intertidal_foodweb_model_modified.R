@@ -44,7 +44,9 @@ do.population.size.barnacles <- function(S, p.whelk, W.prev, X.prev, S.r, R, p.s
   # R is the number of recruits
   # p.star is the encounter rate of barnacles by sea stars
   # P.prev is the whelk population size in the previous month
-  X <- S*(1-p.whelk*W.prev-p.star*P.prev)*X.prev + S.r*R
+  
+  # rewritten from previous form to make more intuitive sense
+  X <- S.r*R - p.whelk*W.prev*X.prev - p.star*P.prev*X.prev - (1-S)*X.prev
   return (X)
 }
 
@@ -253,5 +255,21 @@ plot(W, xlab="Time", ylab="Whelk")
 plot(P, xlab="Time", ylab="Seastars")
 plot(F, xlab = "Time", ylab = "Free Space")
 
-
+## plot ggplot results
+library(tidyverse)
+fd_results <- tibble(time = seq(1:length(B)),
+                     balanus_glandula = B,
+                     chthamalus_dalli = C,
+                     limpets = L,
+                     whelks = W,
+                     pisaster_ochraceus = P,
+                     free_space = F)
+plot.new()
+fd_results %>%
+  gather(balanus_glandula:free_space, key = "species", 
+         value = "abundance") %>%
+  ggplot(aes(x = time, y = abundance)) +
+  geom_point(size = 0.5) +
+  geom_line() + 
+  facet_wrap(~species, scales = "free")
 
