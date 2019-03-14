@@ -23,15 +23,22 @@ do.potential.recruitment <- function(F, size.x, size.recruit.x, larvae.x) {
   return(L)
 }
 
-do.actual.recruitment <- function(F, L, L.B, size.B, L.C, size.C, L.L, size.L) {
-  # NOTE THIS EQUATION IS DIFFERENT FROM IN THE TEXT--DON'T KNOW WHAT S IS
+do.actual.recruitment <- function(F, L, S, L.B, size.B, L.C, size.C, L.L, size.L) {
+  # L is the potential recruits of target species
+  # S is the survival of recruits of target species
   # L.B is potential recruits of B. glandula
   # L.C is potential recruits of C. fissus/dalli
   # L.L is potential recruits of limpets
   # size.B = average size of adult B. glandula
   # size.C = average size of C. fissus/dalli
   # size.L = average size of an adult limpet
-  R <- F*L / (L.B*size.B + L.C*size.C + L.L*size.L)
+  
+  ## note: below is eqn 2 in appendix, causes populations to crash
+  ## because the fraction is >>1
+  # R <- ((F*S) / (L.B*size.B + L.C*size.C + L.L*size.L)) * L
+  
+  ## rewrite logically as fraction of occupied space
+  R <- ((L.B*size.B + L.C*size.C + L.L*size.L) / F) * S * L
   return(R)
 }
 
@@ -46,7 +53,9 @@ do.population.size.barnacles <- function(S, p.whelk, W.prev, X.prev, S.r, R, p.s
   # P.prev is the whelk population size in the previous month
   
   # rewritten from previous form to make more intuitive sense
-  X <- S.r*R - p.whelk*W.prev*X.prev - p.star*P.prev*X.prev - (1-S)*X.prev
+  X_before_predation <- S*X.prev
+  X <- X_before_predation + S.r*R - p.whelk*W.prev*X_before_predation - 
+    p.star*P.prev*X_before_predation
   return (X)
 }
 
@@ -102,7 +111,15 @@ do.population.size.seastar <- function(S, P.prev, R) {
   # where "P.prev" (= P at time t-1) is incorrectly included as 
   # P at time t+1
   
-  P <- S*P.prev + survival.recruit.P*R
+  # adult population size should be a function of mortality & prey consumption
+  # how to set up predator density dependence? type 2 functional response
+  # 'attack rate' = 'encounter rate'
+    #type_ii_barn <- (attack * X) / (1 + (attack * handling * X))
+  # or use estimates from novak et al. 2017 (calculate myself)
+    #attack <- .
+  
+  
+  #P <- p.po.balanus*B*P.prev + p.po.chtham*C*P.prev + survival.recruit.P*R - (1 -S)*P.prev 
   if (P > 6) {
     P <- 6
   }
@@ -192,21 +209,23 @@ for (t in 2:timesteps) {
                                                    larvae.x=rlnorm(n=1, location.L, shape.L))
   
   # note that there are more recruits than potential recruits :(
-  B.recruits <- do.actual.recruitment(F=F[t-1], L= B.potential.recruits, L.B=B.potential.recruits, 
+  B.recruits <- do.actual.recruitment(F=F[t-1], L= B.potential.recruits, 
+                                      S = survival.B,
+                                      L.B=B.potential.recruits, 
                                       size.B=size.B, L.C=C.potential.recruits, size.C=size.C,
                                       L.L=L.potential.recruits, size.L=size.L)
-  C.recruits <- do.actual.recruitment(F=F[t-1], L= C.potential.recruits, L.B=B.potential.recruits, 
+  C.recruits <- do.actual.recruitment(F=F[t-1], L= C.potential.recruits, 
+                                      S = survival.C,
+                                      L.B=B.potential.recruits, 
                                       size.B=size.B, L.C=C.potential.recruits, size.C=size.C,
                                       L.L=L.potential.recruits, size.L=size.L)
-  L.recruits <- do.actual.recruitment(F=F[t-1], L= L.potential.recruits, L.B=B.potential.recruits, 
+  L.recruits <- do.actual.recruitment(F=F[t-1], L= L.potential.recruits, 
+                                      S = survival.L,
+                                      L.B=B.potential.recruits, 
                                       size.B=size.B, L.C=C.potential.recruits, size.C=size.C,
                                       L.L=L.potential.recruits, size.L=size.L)
   P.recruits <- rlnorm(n=1, location.P, shape.P)
   
-  # make sure that we only recruit as many as we have
-  if (B.potential.recruits > B.recruits) {B.recruits <- B.potential.recruits}
-  if (C.potential.recruits > C.recruits) {C.recruits <- C.potential.recruits}
-  if (L.potential.recruits > L.recruits) {L.recruits <- L.potential.recruits}
   
   B[t] <- do.population.size.barnacles(S=survival.B, p.whelk=p.whelk, W.prev = W[t-1], X.prev=B[t-1],
                                        S.r = survival.recruit.B, R=B.recruits, p.star=p.seastar, P.prev=P[t-1])
