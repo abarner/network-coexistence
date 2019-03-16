@@ -1,0 +1,127 @@
+---
+title: "Testing assumptions in the Forde & Doak model"
+output: github_document
+---
+
+Quick plots and tests of various concepts that are embedded in the forde & doak model.
+
+```{r, warning = FALSE, message = FALSE}
+library(tidyverse)
+```
+
+## fecundity & recruitment assumption
+
+is local fecundity related to mussel recruitment density? forde & doak say no. test using data from sanford & menge 2007 meps.
+
+```{r}
+mussel_recruitment_density <- c(15.2, 27.2, 22.2, 19.4, 297.3, 115.1)
+pyloric_caecum <- c(14.2, 13.5, 13.9, 12.2, 19.5, 11.3)
+cor.test(mussel_recruitment_density, pyloric_caecum)
+```
+
+```{r, echo=FALSE}
+plot(x = pyloric_caecum, y = mussel_recruitment_density)
+```
+
+no statistical relationship, just like f&d assumes
+
+
+## potential recruitment assumptions
+
+from forde & doak 2004 meps
+
+potential recruitment function: should have saturating number of recruits as the number of larvae in the pool increases and free space decreases
+
+```{r}
+B.mean <- 50000
+B.stdev <- sqrt(3.24*10^10)
+location.B <- log(B.mean^2 / sqrt(B.stdev^2 + B.mean^2))
+shape.B <- sqrt(log(1 + (B.stdev^2 / B.mean^2)))
+
+a_x <- 3 * (10^-6) # barnacle recruit size from f&d
+l_x <- rlnorm(n=100, location.B, shape.B)
+F_tprev <- c(0.1, 0.5, 0.75, 0.9)
+A_x <-  9.8 * (10^-5) # adult barn size
+
+do_L_x <- function(a_x, l_x, F_tprev) (F_tprev / A_x) * (1 - exp(-(a_x * l_x )/ F_tprev))
+```
+
+```{r, echo=FALSE}
+as_tibble(expand.grid(F_tprev, l_x, a_x)) %>%
+  rename (F_tprev = "Var1", l_x = "Var2", a_x = "Var3") %>%
+  mutate(L_x = do_L_x(a_x, l_x, F_tprev)) %>%
+  mutate(F_tprev = factor(F_tprev)) %>%
+  ggplot(aes(x = l_x, y = L_x, col = F_tprev)) +
+  geom_point() + 
+  geom_line(aes(col = F_tprev)) +
+  labs(x = "number of larvae in the larval pool for species x (random Normal), time = t",
+       y = "total number of potential recruits of species x, time = t",
+       col = "free space, time = t-1")
+```
+
+behaves the way we think it should
+
+
+## actual recruitment assumptions
+
+should never get more actual recruits than potential recruits..
+
+```{r}
+# given potential recruitment numbers for two species
+L_x <- c(100, 1000, 2500, 5000, 10000)
+L_y <- c(100, 1000, 2500, 5000, 10000)
+# similar adult sizes
+A_x <- 5 * (10^-5)
+A_y <- A_x
+# and a range of free space
+F_tprev <- c(0.1, 0.5, 0.75, 0.9)
+
+do_R_x <- function(F_tprev, L_x, A_x, L_y, A_y) (F_tprev / ((L_x * A_x) + (L_y * A_y))) * L_x
+```
+
+```{r, echo = FALSE}
+as_tibble(expand.grid(F_tprev, L_x, A_x, L_y, A_y)) %>%
+  rename (F_tprev = "Var1", L_x = "Var2", A_x = "Var3", 
+          L_y = "Var4", A_y = "Var5") %>%
+  mutate(R_x = do_R_x(F_tprev, L_x, A_x, L_y, A_y)) %>%
+  mutate(F_tprev = factor(F_tprev),
+         L_y = factor(L_y)) %>%
+  ggplot(aes(x = L_x, y = R_x, col = L_y)) +
+  geom_point() + 
+  geom_line(aes(col = L_y)) + 
+  facet_wrap (~ F_tprev) +
+  geom_abline(slope = 1, intercept = 0) +
+  labs(y = "number of actual recuits of species x",
+       x = "number of potential recruits of species x",
+       col = "number of potential\nrecruits of competitor species")
+```
+
+often see that the number of actual recruits >> potential recruits in the larval pool, as a function of multiple factors. this is likely due to the form of the function.
+
+instead rewrite function following iwasa & roughgarden 1986
+
+```{r}
+# here, the abundance of larvae of the ith species is equation 3 in I & R, but just assumed to be a random lognormal draw in F & D (l_x)
+do_F_prev <- function(A, a_x, X, a_y, Y) {A - ((a_x * X) + (a_y * Y))}
+do_R_x_ir <- function(c_x, L_x, F_tprev) c_x * L_x * F_tprev
+
+A <- 1
+X_0 <- c(1, 1000, 10000, 100000)
+Y_0 <- c(1, 1000, 10000, 100000)
+a_x <- 3 * (10^-6)
+a_y <- 3 * (10^-6)
+# recruit supply rate c should = sr, which is 0.7 in f&d
+c_x <- c()
+L_x <- 1000
+
+
+
+expand.grid(A=A, a_x=a_x, a_y=a_y, c_x=c_x, L_x=L_x, X_0=X_0, Y_0=Y_0) %>%
+  as_tibble() %>%
+  mutate(F_tprev = do_F_prev(A, a_x, X_0, a_y, Y_0)) %>%
+  mutate(R_t = do_R_x_ir(c_x, L_x, F_tprev))
+
+
+
+```
+
