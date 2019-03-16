@@ -19,7 +19,7 @@ do.potential.recruitment <- function(F, size.x, size.recruit.x, larvae.x) {
   # size.x is the average size (e.g. size.B, size.C, or size.L)
   # size.recruit.x is the size of a recruit
   # larvae.x is the number of settling larvae of species x
-  L <- (F/size.x)*(1-exp(-size.recruit.x*larvae.x/F))
+  L <- (F/size.x)*(1-exp(-(size.recruit.x*larvae.x)/F))
   return(L)
 }
 
@@ -118,8 +118,10 @@ do.population.size.seastar <- function(S, P.prev, R) {
   # or use estimates from novak et al. 2017 (calculate myself)
     #attack <- .
   
-  
   #P <- p.po.balanus*B*P.prev + p.po.chtham*C*P.prev + survival.recruit.P*R - (1 -S)*P.prev 
+  
+  P <- S*P.prev + survival.recruit.P*R
+  
   if (P > 6) {
     P <- 6
   }
@@ -262,17 +264,17 @@ for (t in 2:timesteps) {
   
 }
 
-quartz(width=8, height=4)
-par(mfrow=c(1,3))
-plot(B, xlab="Time", ylab="B. glandula")
-plot(C, xlab="Time", ylab="C. fissus")
-plot(L, xlab="Time", ylab="Limpets")
-
-quartz(width=6, height=4)
-par(mfrow=c(1,3))
-plot(W, xlab="Time", ylab="Whelk")
-plot(P, xlab="Time", ylab="Seastars")
-plot(F, xlab = "Time", ylab = "Free Space")
+# quartz(width=8, height=4)
+# par(mfrow=c(1,3))
+# plot(B, xlab="Time", ylab="B. glandula")
+# plot(C, xlab="Time", ylab="C. fissus")
+# plot(L, xlab="Time", ylab="Limpets")
+# 
+# quartz(width=6, height=4)
+# par(mfrow=c(1,3))
+# plot(W, xlab="Time", ylab="Whelk")
+# plot(P, xlab="Time", ylab="Seastars")
+# plot(F, xlab = "Time", ylab = "Free Space")
 
 ## plot ggplot results
 library(tidyverse)
