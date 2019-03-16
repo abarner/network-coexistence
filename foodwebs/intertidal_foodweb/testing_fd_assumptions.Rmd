@@ -111,17 +111,31 @@ Y_0 <- c(1, 1000, 10000, 100000)
 a_x <- 3 * (10^-6)
 a_y <- 3 * (10^-6)
 # recruit supply rate c should = sr, which is 0.7 in f&d
-c_x <- c()
-L_x <- 1000
+c_x <- c(0.1, 0.25, 0.5, 0.7, 0.99)
+L_x <- c(100, 1000, 2500, 5000, 10000)
+```
 
-
-
+```{r, echo=FALSE}
 expand.grid(A=A, a_x=a_x, a_y=a_y, c_x=c_x, L_x=L_x, X_0=X_0, Y_0=Y_0) %>%
   as_tibble() %>%
   mutate(F_tprev = do_F_prev(A, a_x, X_0, a_y, Y_0)) %>%
-  mutate(R_t = do_R_x_ir(c_x, L_x, F_tprev))
-
-
-
+  mutate(R_t = do_R_x_ir(c_x, L_x, F_tprev)) %>%
+  mutate(actual_to_potential = R_t/L_x,
+         c_x = factor(c_x)) %>%
+  ggplot(aes(x = F_tprev, y = actual_to_potential)) +
+  geom_point(aes(color = c_x)) +
+  geom_line(aes(group = c_x, color = c_x)) +
+  facet_wrap(~ X_0) +
+  geom_abline(slope = 1, intercept = 0) +
+  labs(x = "free space at time = t-1",
+       y = "ratio = actual recruitment / potential recruitment",
+       color = "larval settlement rate")
 ```
+
+Here, the dynamics are much more reasonable. Across a range of total population sizes (1, ..., 1e+05), can see that:
+
+1. actual recruitment never exceeds potential recruitment,  
+2. higher larval settlement rates result in larger actual recruitment events
+3. less free space results in lower recruitment
+
 

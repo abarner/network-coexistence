@@ -79,4 +79,29 @@ do_R_x <- function(F_tprev, L_x, A_x, L_y, A_y) (F_tprev / ((L_x * A_x) + (L_y *
 
 ![](testing_fd_assumptions_files/figure-markdown_github/unnamed-chunk-7-1.png)
 
-often see that the number of actual recruits &gt;&gt; potential recruits in the larval pool, as a function of multiple factors.
+often see that the number of actual recruits &gt;&gt; potential recruits in the larval pool, as a function of multiple factors. this is likely due to the form of the function.
+
+instead rewrite function following iwasa & roughgarden 1986
+
+``` r
+# here, the abundance of larvae of the ith species is equation 3 in I & R, but just assumed to be a random lognormal draw in F & D (l_x)
+do_F_prev <- function(A, a_x, X, a_y, Y) {A - ((a_x * X) + (a_y * Y))}
+do_R_x_ir <- function(c_x, L_x, F_tprev) c_x * L_x * F_tprev
+
+A <- 1
+X_0 <- c(1, 1000, 10000, 100000)
+Y_0 <- c(1, 1000, 10000, 100000)
+a_x <- 3 * (10^-6)
+a_y <- 3 * (10^-6)
+# recruit supply rate c should = sr, which is 0.7 in f&d
+c_x <- c(0.1, 0.25, 0.5, 0.7, 0.99)
+L_x <- c(100, 1000, 2500, 5000, 10000)
+```
+
+![](testing_fd_assumptions_files/figure-markdown_github/unnamed-chunk-9-1.png)
+
+Here, the dynamics are much more reasonable. Across a range of total population sizes (1, ..., 1e+05), can see that:
+
+1.  actual recruitment never exceeds potential recruitment,
+2.  higher larval settlement rates result in larger actual recruitment events
+3.  less free space results in lower recruitment
