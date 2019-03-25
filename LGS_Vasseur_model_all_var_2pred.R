@@ -19,14 +19,15 @@ VassFox_Cvar <- function (Time, State, Pars) {
   })
 }
 
+
 VassFox_Cvar_2P <-function(Time, State, Pars){
   
   with(as.list(c(State, Pars)), {
     #M_C1_j = M_C1_0 * exp()
     #M_C2_j = M_C2_0 * exp()
-    dP_1 = - (M_P1 * P1) + ( ( (J_P1 * P1) * ( (O_P1_C1 * C1) + ( (1 - O_P1_C1) * C2) ) ) / ( (O_P1_C1 * C1) + ((1 - O_P1_C1) * C2) + C_0) ) 
+    dP_1 = - (M_P1 * P1) + ( ( (J_P1 * P1) * ( (O_P1_C1 * C1) + ( (1 - O_P1_C1) * C2) ) ) / ( (O_P1_C1 * C1) + ((1 - O_P1_C1) * C2)+ (O_P2_C1 * C1) + ((1 - O_P2_C1) * C2) + C_0)) 
     
-    dP_2 = - (M_P2 * P2) + ( ( (J_P2 * P2) * ( (O_P2_C1 * C1) + ( (1 - O_P2_C1) * C2) ) ) / ( (O_P2_C1 * C1) + ((1 - O_P2_C1) * C2) + C_0) ) 
+    dP_2 = - (M_P2 * P2) + ( ( (J_P2 * P2) * ( (O_P2_C1 * C1) + ( (1 - O_P2_C1) * C2) ) ) / ( (O_P1_C1 * C1) + ((1 - O_P1_C1) * C2)+ (O_P2_C1 * C1) + ((1 - O_P2_C1) * C2) + C_0)) 
     
     
     #dP = - (M_P * P) + ( ( (J_P * P) * ( (O_P_C1 * C1) + ( (1 - O_P_C1) * C2) ) ) / ( (O_P_C1 * C1) + ((1 - O_P_C1) * C2) + C_0) ) 
@@ -46,13 +47,6 @@ VassFox_Cvar_2P <-function(Time, State, Pars){
     
   })
 }
-
-
-
-
-
-}
-
 
 #enviro flux consumers
 sigma <- 0.2
