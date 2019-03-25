@@ -1,0 +1,3 @@
+The LGS Vasseur model has been expanded to have 2 predators and 3 consumers. Predators, consumers, and resources can also experience enviromental fluxations. 
+Since a number of parameters were added, a machine learning approach was used to estimate parameter ranges that resulted in all species coexisting. From the estimated parameter sets
+I chose 5 which seemed to give resonable dynamics. These parameters are listed in the LGS_Vasseur_optimized_draw.R file, and a graph of each is show. 
