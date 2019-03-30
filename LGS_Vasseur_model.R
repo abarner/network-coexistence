@@ -3,6 +3,7 @@
 # For tree species mortality rates through time (e.g. from Vasseur and Fox appendix)
 
 library(here)
+library(deSolve)
 # ----------------------------------------------------------------------------------------------------
 # Run model with both species to get overall dynamics
 
@@ -50,14 +51,14 @@ O_C2_R = 0.98
 sigma=0.55
 
 # cross-correlation of C1 and C2
-rho=0
+rho=-.75
 
 time  <- 5000 # number of timesteps to run the model 
 
 # ----------------------------------------------------------------------------------------------------
 # looping over multiple runs
 
-runs <- 5
+runs <- 500
 C1_final_mechanisms <- matrix(data=NA, nrow=runs, ncol=5)
 C2_final_mechanisms <- matrix(data=NA, nrow=runs, ncol=5)
 colnames(C1_final_mechanisms ) <- c("C1_r_bar", "C1_delta_0", "C1_delta_P", "C1_delta_E", "C1_delta_EP")
@@ -581,8 +582,8 @@ for (run_loop in 1:runs) {
 }
 
 write.csv(C1_final_mechanisms, file = here("foodwebs", "cr_variation_examplecode_files", 
-                                           "mechanism_figs", "C1_final_mechanisms.csv"), row.names=FALSE)
+                                           "mechanism_figs", "C1_final_mechanisms_positive_cross.csv"), row.names=FALSE)
 write.csv(C2_final_mechanisms, file = here("foodwebs", "cr_variation_examplecode_files", 
-                                           "mechanism_figs", "C2_final_mechanisms.csv"), row.names=FALSE)
+                                           "mechanism_figs", "C2_final_mechanisms_positive_cross.csv"), row.names=FALSE)
 # ----------------------------------------------------------------------------------------------------
 # to plot run plotting_mechanisms.R
