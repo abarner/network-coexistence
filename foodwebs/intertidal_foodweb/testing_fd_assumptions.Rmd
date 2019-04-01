@@ -20,7 +20,7 @@ cor.test(mussel_recruitment_density, pyloric_caecum)
 ```
 
 ```{r, echo=FALSE}
-plot(x = pyloric_caecum, y = mussel_recruitment_density)
+plot(x = pyloric_caecum, y = mussel_recruitment_density, pch = 16)
 ```
 
 no statistical relationship, just like f&d assumes
@@ -54,9 +54,10 @@ as_tibble(expand.grid(F_tprev, l_x, a_x)) %>%
   ggplot(aes(x = l_x, y = L_x, col = F_tprev)) +
   geom_point() + 
   geom_line(aes(col = F_tprev)) +
+  geom_abline(slope = 1, intercept = 0) +
   labs(x = "number of larvae in the larval pool for species x (random Normal), time = t",
        y = "total number of potential recruits of species x, time = t",
-       col = "free space, time = t-1")
+       col = "free space, time = t-1") 
 ```
 
 behaves the way we think it should
@@ -139,3 +140,12 @@ Here, the dynamics are much more reasonable. Across a range of total population 
 3. less free space results in lower recruitment
 
 
+## mortality of pisaster
+
+pisaster (the sea star) has an open population, such that the local abundance of adults is not related to the number of larvae settling at any time point. thus overall population size is not related to the intake of prey in most models. however, we want to set the adult population size to decline if prey population size declines, but not to increase if prey abundance increases. how to do so?
+
+```{r}
+x <- seq.int(from=0, to = 100)
+y_fun <- function(x) {(x+.01)/((x*x)+.01)}
+plot(x = x, y = y_fun(x))
+```
