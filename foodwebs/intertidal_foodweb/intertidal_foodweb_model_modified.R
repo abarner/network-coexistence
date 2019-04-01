@@ -91,19 +91,19 @@ do.population.size.whelks <- function(W.prev,
 }
 
 do.whelk.recruitment <- function(avg.C, avg.B, p, Y, W.prev, B.prev, C.prev, S, 
-                                 r = 0.01) {
+                                 r = 1) {
   # avg.C is the average number of C. fissus/dalli from April through June
   # avg. B is the average number of B. glandula from April through June
   # p is the per capita predation rate
   
   R <- (avg.C + avg.B)*3*p*Y*W.prev*S*(B.prev + C.prev)
   
-  R_logistic <- (R / 90) * exp(r * (1 - R / 90))
+  R_logistic <- (R / 90) * exp(r * (1 - (R / 90)))
   
-  return(R_logistic)
+  return(R_logistic * R)
 }
 
-do.population.size.seastar <- function(S, P.prev, R, Prey.prev, r = 0.5) {
+do.population.size.seastar <- function(S, P.prev, R, Prey.prev, r = 1) {
   # S is seastar adult survival
   # P.prev is previous seastar population size
   # R is abundance of recruits
@@ -115,12 +115,16 @@ do.population.size.seastar <- function(S, P.prev, R, Prey.prev, r = 0.5) {
   # where "P.prev" (= P at time t-1) is incorrectly included as 
   # P at time t+1
   
-  P <- S*P.prev + survival.recruit.P*R # - ((Prey.prev + 1) / ((Prey.prev ^2) + 1))
+  P <- S*P.prev + survival.recruit.P*R
   
-  P_logistic <- (P / 6) * exp(r * (1 - P / 6))
+  P_logistic <- (P / 6) * exp(r * (1 - (P / 6)))
   
-  return(P_logistic)
+  return(P_logistic * P)
 }
+
+# add equation for seastar recruits
+# sea stars grow very slowly, and should only enter into the "adult"
+# population once a year                                                                                                           
 
 # ----------------------------------------------------------------------------------------------------
 # model parameters
@@ -148,12 +152,10 @@ survival.recruit.B <- .7
 survival.recruit.C <- .7
 survival.recruit.L <- .88
 survival.recruit.W <- .88
-survival.recruit.P <- .98
-
+survival.recruit.P <- 0.001
 # from menge 1975:
 # average annual survival of spawned gametes to postmaturity longevity = 
 # 1.46 x 10-9/m2/year, and annual mortality of gametes is 0.999
-#### come back to this ####
 
 delta <- -.02 # density dependence for limpets
 p.whelk <- .001 # per capita whelk predation rate
@@ -199,8 +201,8 @@ L.stdev <- sqrt(3.8*10^6)
 location.L <- log(L.mean^2 / sqrt(L.stdev^2 + L.mean^2))
 shape.L <- sqrt(log(1 + (L.stdev^2 / L.mean^2)))
 
-P.mean <- 6873
-P.stdev <- sqrt(3.02*10^7)
+P.mean <- 727
+P.stdev <- sqrt(3.4*10^5)
 location.P <- log(P.mean^2 / sqrt(P.stdev^2 + P.mean^2))
 shape.P <- sqrt(log(1 + (P.stdev^2 / P.mean^2)))
 
