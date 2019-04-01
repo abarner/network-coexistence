@@ -61,6 +61,14 @@ do.population.size.limpets <- function(S, L.prev, S.r, R, delta) {
   return(L)
 }
 
+
+# one of the main problems that causes the system to be "unbalanced" 
+# (e.g., major barnacle mortality) is a lack of logistic growth in the
+# whelk population. the time steps are too large to result in logistic growth
+# and whelk recruitment is >> 90 (which is the set max population size) 
+# in f & d. however, if we set maximum whelk population size at a flat number,
+# that results in a constant removal of barnacle population size, which 
+# doesn't quite represent predator dynamics. instead, 
 do.population.size.whelks <- function(W.prev, 
                                       #W.feeding, 
                                       S, 
@@ -82,16 +90,15 @@ do.population.size.whelks <- function(W.prev,
   return(W)
 }
 
-do.whelk.recruitment <- function(avg.C, avg.B, p, Y, W.prev, B.prev, C.prev, S, r = 0.00001) {
+do.whelk.recruitment <- function(avg.C, avg.B, p, Y, W.prev, B.prev, C.prev, S, 
+                                 r = 0.01) {
   # avg.C is the average number of C. fissus/dalli from April through June
   # avg. B is the average number of B. glandula from April through June
   # p is the per capita predation rate
   
-  (avg.C + avg.B)
+  R <- (avg.C + avg.B)*3*p*Y*W.prev*S*(B.prev + C.prev)
   
-  R <- (avg.C + avg.B)*3*p*Y*W.prev*S*(B.prev+C.prev)
-  
-  R_logistic <- (R / 90) * exp(r * (1 - r / 90))
+  R_logistic <- (R / 90) * exp(r * (1 - R / 90))
   
   return(R_logistic)
 }
@@ -142,14 +149,15 @@ survival.recruit.C <- .7
 survival.recruit.L <- .88
 survival.recruit.W <- .88
 survival.recruit.P <- .98
+
 # from menge 1975:
 # average annual survival of spawned gametes to postmaturity longevity = 
 # 1.46 x 10-9/m2/year, and annual mortality of gametes is 0.999
 #### come back to this ####
 
 delta <- -.02 # density dependence for limpets
-p.whelk <- .01 # per capita whelk predation rate
-Y <- .01 # whelk conversion rate
+p.whelk <- .001 # per capita whelk predation rate
+Y <- .001 # whelk conversion rate
 p.seastar <- .007 # per capita whelk predation rate
 
 T <- 1
@@ -196,6 +204,25 @@ P.stdev <- sqrt(3.02*10^7)
 location.P <- log(P.mean^2 / sqrt(P.stdev^2 + P.mean^2))
 shape.P <- sqrt(log(1 + (P.stdev^2 / P.mean^2)))
 
+# to try to understand dynamics, want to track each variable at each time step
+results <- data.frame(
+  timesteps = rep(NA, timesteps),
+  B.potential.recruits = rep(NA, timesteps),
+  C.potential.recruits = rep(NA, timesteps),
+  L.potential.recruits = rep(NA, timesteps),
+  B.recruits = rep(NA, timesteps),
+  C.recruits = rep(NA, timesteps),
+  L.recruits = rep(NA, timesteps),
+  P.recruits = rep(NA, timesteps),
+  B = rep(NA, timesteps),
+  C = rep(NA, timesteps),
+  L = rep(NA, timesteps),
+  W.recruits = rep(NA, timesteps),
+  W = rep(NA, timesteps),
+  P = rep(NA, timesteps),
+  F = rep(NA, timesteps)
+)
+
 for (t in 2:timesteps) {
   B.potential.recruits <- do.potential.recruitment(F=F[t-1], size.x=size.B, size.recruit.x=size.recruit.B, 
                                                    larvae.x=rlnorm(n=1, location.B, shape.B))
@@ -223,7 +250,7 @@ for (t in 2:timesteps) {
   if(month[t] == "Jun") {
     W.recruits <- do.whelk.recruitment(avg.C=mean(c(C[t], C[t-1], C[t-2])), 
                                        avg.B=mean(c(B[t], B[t-1], B[t-2])),
-                                       S = 0.9,
+                                       S = survival.recruit.W,
                                        p=p.whelk, Y=Y, W.prev=W[t-1], B.prev=B[t], C.prev=C[t])   
   } else {
     W.recruits <- 0
@@ -249,6 +276,22 @@ for (t in 2:timesteps) {
   F[t] <- do.free.space.calculation(T=T, B=B[t], size.B=size.B, C=C[t], 
                                     size.C=size.C, L=L[t], size.L=size.L)
   
+  # track all results
+    results$timesteps[t] <- t
+    results$B.potential.recruits[t] <- B.potential.recruits
+    results$C.potential.recruits[t] <- C.potential.recruits
+    results$L.potential.recruits[t] <- L.potential.recruits
+    results$B.recruits[t] <- B.recruits
+    results$C.recruits[t] <- C.recruits
+    results$L.recruits[t] <- L.recruits
+    results$P.recruits[t] <- P.recruits
+    results$B[t] <- B[t]
+    results$C[t] <- C[t]
+    results$L[t] <- L[t]
+    results$W.recruits[t] <- W.recruits
+    results$W[t] <- W[t]
+    results$P[t] <- P[t]
+    results$F[t] <- F[t]
 }
 
 # quartz(width=8, height=4)
