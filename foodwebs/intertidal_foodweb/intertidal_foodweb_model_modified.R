@@ -1,5 +1,4 @@
 ## updated version of the forde & doak 2004 model
-## changes primarily to the whelk and seastar predation models
 
 do.free.space.calculation <- function(T, B, size.B, C, size.C, L, size.L) {
   # T = total area
@@ -103,7 +102,7 @@ do.whelk.recruitment <- function(avg.C, avg.B, p, Y, W.prev, B.prev, C.prev, S,
   return(R_logistic * R)
 }
 
-do.population.size.seastar <- function(S, P.prev, R, Prey.prev, r = 1) {
+do.population.size.seastar <- function(S, P.prev, R, r = 1) {
   # S is seastar adult survival
   # P.prev is previous seastar population size
   # R is abundance of recruits
@@ -206,6 +205,60 @@ P.stdev <- sqrt(3.4*10^5)
 location.P <- log(P.mean^2 / sqrt(P.stdev^2 + P.mean^2))
 shape.P <- sqrt(log(1 + (P.stdev^2 / P.mean^2)))
 
+# want to loop across multiple levels of recruitment variation
+# for each species, from Table 1 in F & D, use "low" variance option each time
+location_function <- function(x_mean, x_stdev) log(x_mean^2 / sqrt(x_stdev^2 + x_mean^2))
+shape_function <- function(x_mean, x_stdev) sqrt(log(1 + (x_stdev ^2 / x_mean^2)))
+
+larval_supply <- tribble (
+  ~species, ~mean_recruit, ~variance_recruit, ~supply_level,
+  "B", 90000, 4.6*10^9, "high",
+  "B", 50000, 1.41*10^10, "med",
+  "B", 6000, 2.025*10^7, "low",
+  "C", 70000, 2.75*10^9, "high",
+  "C", 30000, 5.1*10^8, "med",
+  "C", 6000, 2.025*10^7, "low",
+  "L", 3000, 3.8*10^6, "high",
+  "L", 2400, 2.4*10^6, "med",
+  "L", 200, 169000, "low",
+  "P", 6873, 3.02*10^7, "high",
+  "P", 3800, 9.2*10^6, "med",
+  "P", 727, 3.4*10^5, "low"
+)
+
+# which scenarios do we want to run? 
+# high - all 4, low - all 4, B high, C high, L high
+larval_scenarios_table1 <- tribble (
+  ~scenario, ~species, ~supply_level,
+  1, "B", "high",
+  1, "C", "high",
+  1, "L", "high",
+  1, "P", "high",
+  2, "B", "low",
+  2, "C", "low",
+  2, "L", "low",
+  2, "P", "low",
+  3, "B", "high",
+  3, "C", "low",
+  3, "L", "low",
+  3, "P", "low",
+  4, "B", "low",
+  4, "C", "high",
+  4, "L", "low",
+  4, "P", "low"
+)
+larval_scenarios_table1 %>%
+  left_join(larval_supply) %>%
+  mutate(location = location_function(mean_recruit, variance_recruit),
+         shape = shape_function(mean_recruit, variance_recruit)) %>%
+  select(-mean_recruit, -variance_recruit, - supply_level) %>%
+  gather(key = variable, value = value, location, shape) %>%
+  unite(temp, species, variable) %>%
+  spread(temp, value) -> larval_scenarios
+
+#### next step ####
+# pull each row of "larval scenarios" to run a loop of the model
+
 # to try to understand dynamics, want to track each variable at each time step
 results <- data.frame(
   timesteps = rep(NA, timesteps),
@@ -272,8 +325,7 @@ for (t in 2:timesteps) {
                                     S = survival.W,
                                     R=W.recruits)
   
-  P[t] <- do.population.size.seastar(S=survival.P, P.prev=P[t-1], R=P.recruits,
-                                     Prey.prev = B[t] + C[t])
+  P[t] <- do.population.size.seastar(S=survival.P, P.prev=P[t-1], R=P.recruits)
   
   F[t] <- do.free.space.calculation(T=T, B=B[t], size.B=size.B, C=C[t], 
                                     size.C=size.C, L=L[t], size.L=size.L)
@@ -318,7 +370,7 @@ fd_results <- tibble(time = seq(1:length(B)),
                      pisaster_ochraceus = P,
                      free_space = F)
 plot.new()
-png(filename = "forde_and_doak_new_dynamics.png", width = 10, height = 7, units = "in", res = 300)
+#png(filename = "forde_and_doak_new_dynamics.png", width = 10, height = 7, units = "in", res = 300)
 fd_results %>%
   #filter(time < 100) %>%
   gather(balanus_glandula:free_space, key = "species", 
@@ -329,5 +381,5 @@ fd_results %>%
   geom_line() + 
   facet_wrap(~species, scales = "free") +
   theme(legend.position = "none")
-dev.off()
+#dev.off()
 
