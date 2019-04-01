@@ -318,6 +318,7 @@ fd_results <- tibble(time = seq(1:length(B)),
                      pisaster_ochraceus = P,
                      free_space = F)
 plot.new()
+png(filename = "forde_and_doak_new_dynamics.png", width = 10, height = 7, units = "in", res = 300)
 fd_results %>%
   #filter(time < 100) %>%
   gather(balanus_glandula:free_space, key = "species", 
@@ -326,5 +327,7 @@ fd_results %>%
   ggplot(aes(x = time, y = abundance)) +
   geom_point(size = 2, aes(col = neg_value)) +
   geom_line() + 
-  facet_wrap(~species, scales = "free")
+  facet_wrap(~species, scales = "free") +
+  theme(legend.position = "none")
+dev.off()
 
