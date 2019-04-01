@@ -23,23 +23,12 @@ do.potential.recruitment <- function(F, size.x, size.recruit.x, larvae.x) {
   return(L)
 }
 
-do.actual.recruitment <- function(F, L, S, L.B, size.B, L.C, size.C, L.L, size.L) {
-  # L is the potential recruits of target species
-  # S is the survival of recruits of target species
-  # L.B is potential recruits of B. glandula
-  # L.C is potential recruits of C. fissus/dalli
-  # L.L is potential recruits of limpets
-  # size.B = average size of adult B. glandula
-  # size.C = average size of C. fissus/dalli
-  # size.L = average size of an adult limpet
-  
-  ## note: below is eqn 2 in appendix, causes populations to crash
-  ## because the fraction is >>1
-  # R <- ((F*S) / (L.B*size.B + L.C*size.C + L.L*size.L)) * L
-  
-  ## rewrite logically as fraction of occupied space
-  R <- ((L.B*size.B + L.C*size.C + L.L*size.L) / F) * S * L
-  return(R)
+do.actual.recruitment <- function(F, L, C) {
+  # based on iwasa & roughgarden equation 1
+  # C = c_i of iwasa & roughgarden, larval settlement rate/recruit survival of target species
+  # F = amount of free space in the system
+  # L = potential number of recruits of target species coming from the larval pool
+  return(C * L * F)
 }
 
 do.population.size.barnacles <- function(S, p.whelk, W.prev, X.prev, S.r, R, p.star, P.prev) {
@@ -54,8 +43,11 @@ do.population.size.barnacles <- function(S, p.whelk, W.prev, X.prev, S.r, R, p.s
   
   # rewritten from previous form to make more intuitive sense
   X_before_predation <- S*X.prev
-  X <- X_before_predation + S.r*R - p.whelk*W.prev*X_before_predation - 
-    p.star*P.prev*X_before_predation
+  if (X_before_predation < 0) {X_before_predation <- 0}
+  
+  X <- X_before_predation + S.r*R - p.whelk*W.prev*X_before_predation - p.star*P.prev*X_before_predation
+  if (X < 0) {X <- 0}
+  
   return (X)
 }
 
@@ -90,45 +82,37 @@ do.population.size.whelks <- function(W.prev,
   return(W)
 }
 
-do.whelk.recruitment <- function(avg.C, avg.B, p, Y, W.prev, B.prev, C.prev) {
+do.whelk.recruitment <- function(avg.C, avg.B, p, Y, W.prev, B.prev, C.prev, S, r = 0.00001) {
   # avg.C is the average number of C. fissus/dalli from April through June
   # avg. B is the average number of B. glandula from April through June
   # p is the per capita predation rate
-  R <- (avg.C + avg.B)*3*p*Y*W.prev*(B.prev+C.prev)
-  if (R > 90) {
-    # note that if the max. recruitment rate is not set, then
-    # whelk recruitment becomes very large very quickly
-    R <- 90
-  }
-  return(R)
+  
+  (avg.C + avg.B)
+  
+  R <- (avg.C + avg.B)*3*p*Y*W.prev*S*(B.prev+C.prev)
+  
+  R_logistic <- (R / 90) * exp(r * (1 - r / 90))
+  
+  return(R_logistic)
 }
 
-do.population.size.seastar <- function(S, P.prev, R) {
+do.population.size.seastar <- function(S, P.prev, R, Prey.prev, r = 0.5) {
   # S is seastar adult survival
   # P.prev is previous seastar population size
+  # R is abundance of recruits
+  # survival.recruit.P is seastar recruit survival
+  # Prey.prev is total population size of prey at last time point
+  # r is population growth rate 
   
   # note that there is a typo in equation 7 in Forde & Doak appendix 
   # where "P.prev" (= P at time t-1) is incorrectly included as 
   # P at time t+1
   
-  # adult population size should be a function of mortality & prey consumption
-  # how to set up predator density dependence? type 2 functional response
-  # 'attack rate' = 'encounter rate'
-    #type_ii_barn <- (attack * X) / (1 + (attack * handling * X))
-  # or use estimates from novak et al. 2017 (calculate myself)
-    #attack <- .
+  P <- S*P.prev + survival.recruit.P*R # - ((Prey.prev + 1) / ((Prey.prev ^2) + 1))
   
-  #P <- p.po.balanus*B*P.prev + p.po.chtham*C*P.prev + survival.recruit.P*R - (1 -S)*P.prev 
+  P_logistic <- (P / 6) * exp(r * (1 - P / 6))
   
-  P <- S*P.prev + survival.recruit.P*R
-  
-  if (P > 6) {
-    P <- 6
-  }
-  if(P<0) {
-    P <- 0
-  }
-  return(P)
+  return(P_logistic)
 }
 
 # ----------------------------------------------------------------------------------------------------
@@ -148,10 +132,20 @@ survival.W <- .94
 survival.P <- .992
 
 
+# in connolly & roughgarden 1999, table 1, settlement is 0.02/hour/m2 for barn
+settlement.B <- .02 * 30 # to convert into per month
+settlement.C <- .02 * 30
+settlement.L <- .03 * 30 # from gilman 2006 ecography
+
 survival.recruit.B <- .7
 survival.recruit.C <- .7
 survival.recruit.L <- .88
-survival.recruit.P <- .998
+survival.recruit.W <- .88
+survival.recruit.P <- .98
+# from menge 1975:
+# average annual survival of spawned gametes to postmaturity longevity = 
+# 1.46 x 10-9/m2/year, and annual mortality of gametes is 0.999
+#### come back to this ####
 
 delta <- -.02 # density dependence for limpets
 p.whelk <- .01 # per capita whelk predation rate
@@ -182,23 +176,23 @@ P[1] <- 1
 F[1] <- do.free.space.calculation(T=T, B=B[1], size.B=size.B, C=C[1], 
                                   size.C=size.C, L=L[1], size.L=size.L)
 
-B.mean <- 50000
-B.stdev <- sqrt(3.24*10^10)
+B.mean <- 90000
+B.stdev <- sqrt(4.6*10^9)
 location.B <- log(B.mean^2 / sqrt(B.stdev^2 + B.mean^2))
 shape.B <- sqrt(log(1 + (B.stdev^2 / B.mean^2)))
 
-C.mean <- 30000
-C.stdev <- sqrt(3.6*10^9)
+C.mean <- 70000
+C.stdev <- sqrt(2.75*10^9)
 location.C <- log(C.mean^2 / sqrt(C.stdev^2 + C.mean^2))
 shape.C <- sqrt(log(1 + (C.stdev^2 / C.mean^2)))
 
 L.mean <- 3000
-L.stdev <- sqrt(2.8*10^7)
+L.stdev <- sqrt(3.8*10^6)
 location.L <- log(L.mean^2 / sqrt(L.stdev^2 + L.mean^2))
 shape.L <- sqrt(log(1 + (L.stdev^2 / L.mean^2)))
 
-P.mean <- 3800
-P.stdev <- sqrt(3.7*10^7)
+P.mean <- 6873
+P.stdev <- sqrt(3.02*10^7)
 location.P <- log(P.mean^2 / sqrt(P.stdev^2 + P.mean^2))
 shape.P <- sqrt(log(1 + (P.stdev^2 / P.mean^2)))
 
@@ -212,20 +206,11 @@ for (t in 2:timesteps) {
   
   # note that there are more recruits than potential recruits :(
   B.recruits <- do.actual.recruitment(F=F[t-1], L= B.potential.recruits, 
-                                      S = survival.B,
-                                      L.B=B.potential.recruits, 
-                                      size.B=size.B, L.C=C.potential.recruits, size.C=size.C,
-                                      L.L=L.potential.recruits, size.L=size.L)
+                                      C = settlement.B)
   C.recruits <- do.actual.recruitment(F=F[t-1], L= C.potential.recruits, 
-                                      S = survival.C,
-                                      L.B=B.potential.recruits, 
-                                      size.B=size.B, L.C=C.potential.recruits, size.C=size.C,
-                                      L.L=L.potential.recruits, size.L=size.L)
+                                      C = settlement.C)
   L.recruits <- do.actual.recruitment(F=F[t-1], L= L.potential.recruits, 
-                                      S = survival.L,
-                                      L.B=B.potential.recruits, 
-                                      size.B=size.B, L.C=C.potential.recruits, size.C=size.C,
-                                      L.L=L.potential.recruits, size.L=size.L)
+                                      C = settlement.L)
   P.recruits <- rlnorm(n=1, location.P, shape.P)
   
   
@@ -238,6 +223,7 @@ for (t in 2:timesteps) {
   if(month[t] == "Jun") {
     W.recruits <- do.whelk.recruitment(avg.C=mean(c(C[t], C[t-1], C[t-2])), 
                                        avg.B=mean(c(B[t], B[t-1], B[t-2])),
+                                       S = 0.9,
                                        p=p.whelk, Y=Y, W.prev=W[t-1], B.prev=B[t], C.prev=C[t])   
   } else {
     W.recruits <- 0
@@ -257,7 +243,8 @@ for (t in 2:timesteps) {
                                     S = survival.W,
                                     R=W.recruits)
   
-  P[t] <- do.population.size.seastar(S=survival.P, P.prev=P[t-1], R=P.recruits)
+  P[t] <- do.population.size.seastar(S=survival.P, P.prev=P[t-1], R=P.recruits,
+                                     Prey.prev = B[t] + C[t])
   
   F[t] <- do.free.space.calculation(T=T, B=B[t], size.B=size.B, C=C[t], 
                                     size.C=size.C, L=L[t], size.L=size.L)
@@ -287,10 +274,12 @@ fd_results <- tibble(time = seq(1:length(B)),
                      free_space = F)
 plot.new()
 fd_results %>%
+  #filter(time < 100) %>%
   gather(balanus_glandula:free_space, key = "species", 
          value = "abundance") %>%
+  mutate(neg_value = ifelse(abundance < 0, "yes", "no")) %>%
   ggplot(aes(x = time, y = abundance)) +
-  geom_point(size = 0.5) +
+  geom_point(size = 2, aes(col = neg_value)) +
   geom_line() + 
   facet_wrap(~species, scales = "free")
 
