@@ -157,7 +157,10 @@ fd_results_1 <- do.intertidal.simulation(years_set = 500)
 # 2. low density growth rate calculation
 
 # balanus
+  # run without balanus adults or recruits -> equilibrium
 fd_results_ldr_b_absent <- do.intertidal.simulation(years_set = 500, B_1 = 0)
+  # set adult balanus population size very small (~1/1000 of usual size) and run using 
+  # densities from last time step
 fd_results_ldr_b_invade <- 
   do.intertidal.simulation(years_set = 500, 
                            B_1 = 1,
@@ -167,7 +170,7 @@ fd_results_ldr_b_invade <-
                            P_1 = fd_results_ldr_b_absent$pisaster_ochraceus[nrow(fd_results_ldr_b_absent)],
                            total_1 = fd_results_ldr_b_absent$free_space[nrow(fd_results_ldr_b_absent)]
 )
-# low density growthrates
+# calculate low density growth rates
 gr_b_invade <- do.growth.rates(results = fd_results_ldr_b_invade, col_nums = c(2:6))
 
 
@@ -253,12 +256,12 @@ r_bar_cl_c; r_bar_cl_l
 # Have four varying coexistence mechanisms:
 # variation in: balanus, chthamalus, limpet, and pisaster recruitment
 
+# Start just by asking, what happens when competitor recruitment variation removed 
+# vs. predator variation removed?
+
 # 3a. Set all varying parameters to long term average, run steps 1-2 again
-# 3b. Set only "variation in balanus recruitment" = 0, run steps 1-2 again
-# 3c. Set only "variation in chthamalus recruitment" = 0, run steps 1-2 again
-# 3d. Set only "variation in limpet recruitment" = 0, run steps 1-2 again
-# 3e. Set only "variation in pisaster recruitment" = 0, run steps 1-2 again
+# 3b. Set only "variation in competitor recruitment" = 0, run steps 1-2 again
+# 3c. Set only "variation in predator population size" = 0, run steps 1-2 again
 
 
-#### not sure how to get covariance component ####
 
