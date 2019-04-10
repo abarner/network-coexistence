@@ -151,9 +151,13 @@ do.population.size.seastar <- function(S, P.prev, R, r = 1) {
 #### code to run simulation ####
 
 do.intertidal.simulation <- function(
+  
+  years_set = 50, # number of years to run simulation
+  
   settlement.B = .002 * 30 * 24,
   settlement.C = .002 * 30 * 24,
   settlement.L = .0002 * 30 * 24,
+  
   B.mean = 90000,
   B.stdev = sqrt(4.6*10^9),
   C.mean = 70000,
@@ -161,7 +165,19 @@ do.intertidal.simulation <- function(
   L.mean = 3000,
   L.stdev = sqrt(3.8*10^6),
   P.mean = 727,
-  P.stdev = sqrt(3.4*10^5)
+  P.stdev = sqrt(3.4*10^5),
+  
+  var_P = NULL, # if want constant value for pisaster recruitment, set value here
+  var_B = NULL, # for balanus recruitment
+  var_C = NULL, # for chthamalus recruitment
+  var_L = NULL, # for limpet recruitment
+  
+  B_1 = 4100, # defaults to starting conditions given by forde & doak
+  C_1 = 11000,
+  L_1 = 239,
+  W_1 = 93,
+  P_1 = 1,
+  total_1 = 1
 ) {
   
   # ----------------------------------------------------------------------------------------------------
@@ -205,12 +221,12 @@ do.intertidal.simulation <- function(
   Y <- .001 # whelk conversion rate
   p.seastar <- .007 # per capita whelk predation rate
   
-  total <- 1
+  total <- total_1
   
   # ----------------------------------------------------------------------------------------------------
   # Initial conditions
   
-  years <- 50
+  years <- years_set
   timesteps <- years*12
   month <- rep(c("Apr", "May", "Jun", "Jul", "Aug", 
                  "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar"), years)
@@ -218,13 +234,11 @@ do.intertidal.simulation <- function(
   winter <- c("Oct", "Nov", "Dec", "Jan", "Feb", "Mar")
   
   B <- C <- L <- W <- P <- free <- rep(NA, timesteps)
-  B[1] <- 4100
-  C[1] <- 11000
-  #B[1] <- 0
-  #C[1] <- 0
-  L[1] <- 239
-  W[1] <- 93
-  P[1] <- 1
+  B[1] <- B_1
+  C[1] <- C_1
+  L[1] <- L_1
+  W[1] <- W_1
+  P[1] <- P_1
   
   free[1] <- do.free.space.calculation(total=total, B=B[1], size.B=size.B, C=C[1], 
                                     size.C=size.C, L=L[1], size.L=size.L)
@@ -271,11 +285,17 @@ do.intertidal.simulation <- function(
   
   for (t in 2:timesteps) {
     B.potential.recruits <- do.potential.recruitment(free=free[t-1], size.x=size.B, size.recruit.x=size.recruit.B, 
-                                                     larvae.x=rlnorm(n=1, location.B, shape.B))
+                                                     larvae.x= ifelse(is.null(var_B),
+                                                                      rlnorm(n=1, location.B, shape.B),
+                                                                      var_B))
     C.potential.recruits <- do.potential.recruitment(free=free[t-1], size.x=size.C, size.recruit.x=size.recruit.C, 
-                                                     larvae.x=rlnorm(n=1, location.C, shape.C))
+                                                     larvae.x=ifelse(is.null(var_C),
+                                                                     rlnorm(n=1, location.C, shape.C),
+                                                                     var_C))
     L.potential.recruits <- do.potential.recruitment(free=free[t-1], size.x=size.L, size.recruit.x=size.recruit.L, 
-                                                     larvae.x=rlnorm(n=1, location.L, shape.L))
+                                                     larvae.x=ifelse(is.null(var_L),
+                                                                     rlnorm(n=1, location.L, shape.L),
+                                                                     var_L))
     
     # note that there are more recruits than potential recruits :(
     B.recruits <- do.actual.recruitment(free=free[t-1], L= B.potential.recruits, 
@@ -284,14 +304,17 @@ do.intertidal.simulation <- function(
                                         C = settlement.C)
     L.recruits <- do.actual.recruitment(free=free[t-1], L= L.potential.recruits, 
                                         C = settlement.L)
-    P.recruits <- rlnorm(n=1, location.P, shape.P)
+    P.recruits <- ifelse(is.null(var_P),
+                         rlnorm(n=1, location.P, shape.P),
+                         var_P)
     
     
     B[t] <- do.population.size.barnacles(S=survival.B, p.whelk=p.whelk, W.prev = W[t-1], X.prev=B[t-1],
                                          S.r = survival.recruit.B, R=B.recruits, p.star=p.seastar, P.prev=P[t-1])
     C[t] <- do.population.size.barnacles(S=survival.C, p.whelk=p.whelk, W.prev = W[t-1], X.prev=C[t-1],
                                          S.r = survival.recruit.C, R=C.recruits, p.star=p.seastar, P.prev=P[t-1])
-    L[t] <- do.population.size.limpets(S=survival.L, L.prev=L[t-1], S.r=survival.recruit.L, R=L.recruits, delta=delta)
+    L[t] <- do.population.size.limpets(S=survival.L, L.prev=L[t-1], S.r=survival.recruit.L, R=L.recruits, 
+                                       delta=delta)
     
     if(month[t] == "Jun") {
       W.recruits <- do.whelk.recruitment(avg.C=mean(c(C[t], C[t-1], C[t-2])), 
@@ -302,21 +325,20 @@ do.intertidal.simulation <- function(
       W.recruits <- 0
     }
     
-    ## Include this if using form of whelk population model that depends 
-    ## on barnacle population size
-    
-    # if(month[t] %in% summer) {
-    #   W.feeding <- p.whelk*(B[t-1]+C[t-1]) / (1+ (p.whelk*(B[t-1]+C[t-1])))
-    # } else {
-    #   W.feeding <- p.whelk*(B[t-6]+C[t-6]) / (1+ (p.whelk*(B[t-6]+C[t-6])))
-    # }
-    
     W[t] <- do.population.size.whelks(W.prev=W[t-1],
-                                      #W.feeding = W.feeding, 
                                       S = survival.W,
                                       R=W.recruits)
     
     P[t] <- do.population.size.seastar(S=survival.P, P.prev=P[t-1], R=P.recruits)
+    
+    # to do coexistence invasion, need ability to set starting (and total) population size
+    # to 0
+    
+    if (B_1 == 0) B[t] <- 0
+    if (C_1 == 0) C[t] <- 0
+    if (L_1 == 0) L[t] <- 0
+    if (W_1 == 0) W[t] <- 0
+    if (P_1 == 0) P[t] <- 0
     
     free[t] <- do.free.space.calculation(total=total, B=B[t], size.B=size.B, C=C[t], 
                                       size.C=size.C, L=L[t], size.L=size.L)
@@ -350,37 +372,18 @@ do.intertidal.simulation <- function(
   
 }
 
-
-# quartz(width=8, height=4)
-# par(mfrow=c(1,3))
-# plot(B, xlab="Time", ylab="B. glandula")
-# plot(C, xlab="Time", ylab="C. fissus")
-# plot(L, xlab="Time", ylab="Limpets")
-# 
-# quartz(width=6, height=4)
-# par(mfrow=c(1,3))
-# plot(W, xlab="Time", ylab="Whelk")
-# plot(P, xlab="Time", ylab="Seastars")
-# plot(F, xlab = "Time", ylab = "Free Space")
-
-## plot ggplot results
-# fd_results <- tibble(time = seq(1:length(B)),
-#                      balanus_glandula = B,
-#                      chthamalus_dalli = C,
-#                      limpets = L,
-#                      whelks = W,
-#                      pisaster_ochraceus = P,
-#                      free_space = F)
-# plot.new()
-#png(filename = "forde_and_doak_new_dynamics.png", width = 10, height = 7, units = "in", res = 300)
-# fd_results %>%
-#   gather(balanus_glandula:free_space, key = "species", 
-#          value = "abundance") %>%
-#   mutate(neg_value = ifelse(abundance < 0, "yes", "no")) %>%
-#   ggplot(aes(x = time, y = abundance)) +
-#   geom_point(size = 2, aes(col = neg_value)) +
-#   geom_line() + 
-#   facet_wrap(~species, scales = "free") +
-#   theme(legend.position = "none")
-#dev.off()
+do.growth.rates <- function(results,
+                            col_nums # numeric vector of which columns to calculate growth rates for
+                            ) {
+  tmp <- as.matrix(results[, c(col_nums)])
+  tmp_out <- matrix(NA, nrow = nrow(tmp), ncol= ncol(tmp))
+  colnames(tmp_out) <- colnames(tmp)
+  
+  for(i in 2:nrow(results)) {
+    tmp_out[i, ] <- tmp[i, ] / tmp[i-1, ]
+  }
+  
+  return(tmp_out)
+  
+}
 
