@@ -147,7 +147,25 @@ dev.off()
 
 
 
+#### Partition coexistence #####
 
+# 1. run model to equilibrium
+
+fd_results_1 <- do.intertidal.simulation(years_set = 500)
+
+# 2. low density growth rate calculation
+
+# balanus
+fd_results_ldr_b_absent <- do.intertidal.simulation(years_set = 500, B_1 = 0)
+fd_results_ldr_b_invade <- do.intertidal.simulation(years_set = 500, 
+  B_1 = 1,
+  C_1 = fd_results_ldr_b_absent$chthamalus_dalli[nrow(fd_results_ldr_b_absent)],
+  L_1 = fd_results_ldr_b_absent$limpets[nrow(fd_results_ldr_b_absent)],
+  W_1 = fd_results_ldr_b_absent$whelks[nrow(fd_results_ldr_b_absent)],
+  P_1 = fd_results_ldr_b_absent$pisaster_ochraceus[nrow(fd_results_ldr_b_absent)],
+  total_1 = fd_results_ldr_b_absent$free_space[nrow(fd_results_ldr_b_absent)]
+)
+# low density growthrates
 
 
 
