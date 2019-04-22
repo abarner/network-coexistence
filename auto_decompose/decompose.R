@@ -560,7 +560,7 @@ runall <- function(sigma, rho, time) {
 sigma <- 0.55
 
 # cross-correlation of C1 and C2
-rho <- 0
+rho <- .75
 
 #set up for parallization, change the number based on how many cores your machine has. Most personal laptops have 4 or 8. If you don't know how many you have its probably 4. If you have a fancy cluster crank this up to like 100.  
 cluster = makeCluster(8, type = "SOCK")
