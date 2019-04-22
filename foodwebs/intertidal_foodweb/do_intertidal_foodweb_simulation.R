@@ -169,9 +169,34 @@ fd_part_1 <- do.intertidal.rbar()
 
 # a. Set all varying parameters to long term average, run steps 1-2 again
 
-# long term averages:
+# get long term averages:
+fd_part_1_var_C <- mean(fd_part_1$results_1$larvae.C)
+fd_part_1_var_B <- mean(fd_part_1$results_1$larvae.B)
+fd_part_1_var_P <- mean(fd_part_1$results_1$larvae.P)
+fd_part_1_var_L <- mean(fd_part_1$results_1$larvae.L)
 
-# run model to equilibrium:
+# run model to equilibrium and get long term and low density growth rates
+fd_part_2a <- do.intertidal.all.average(var_P_input = fd_part_1_var_P, 
+                                        var_B_input = fd_part_1_var_B, 
+                                        var_C_input = fd_part_1_var_C, 
+                                        var_L_input = fd_part_1_var_L)
+fd_part_2a$r_bar_result
+
+do.growth.rates(results = test, col_nums = c(2:6))
+fd_part_2a$results_2_l_invade %>% 
+  mutate(time_s = seq(1:n())) %>%
+  filter(time_s > 6000) -> test
 
 
+fd_part_2a$results_2_l_invade %>% 
+  gather(balanus_glandula:pisaster_ochraceus, key = "species", value = "abundance") %>%
+  #filter(time > 5900) %>%
+  ggplot(aes(x = time, y = abundance, color = species)) + 
+  geom_point() + geom_line()
+
+fd_part_2a$results_2_b_invade %>% 
+  gather(balanus_glandula:pisaster_ochraceus, key = "species", value = "abundance") %>%
+  #filter(time > 5900) %>%
+  ggplot(aes(x = time, y = abundance, color = species)) + 
+  geom_point() + geom_line()
 

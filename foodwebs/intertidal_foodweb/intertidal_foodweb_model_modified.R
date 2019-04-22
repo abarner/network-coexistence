@@ -395,6 +395,9 @@ do.growth.rates <- function(results,
     tmp_out[i, ] <- tmp[i, ] / tmp[i-1, ]
   }
   
+  # sometimes get "inf" responses when dividor = 0
+  tmp_out[is.infinite(tmp_out)] <- 0
+  
   return(tmp_out)
   
 }
