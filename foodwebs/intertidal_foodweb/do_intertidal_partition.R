@@ -90,25 +90,32 @@ do.intertidal.rbar <- function() {
   # balanus & chthamalus
   r_bar_bc_b <- mean(gr_b_invade[, "balanus_glandula"], na.rm=TRUE) - mean(gr_b_invade[, "chthamalus_dalli"], na.rm=TRUE)
   r_bar_bc_c <- mean(gr_c_invade[, "chthamalus_dalli"], na.rm=TRUE) - mean(gr_c_invade[, "balanus_glandula"], na.rm=TRUE)
-  r_bar_bc_b; r_bar_bc_c
+  #r_bar_bc_b; r_bar_bc_c
   
   # balanus & limpets
   r_bar_bl_b <- mean(gr_b_invade[, "balanus_glandula"], na.rm=TRUE) - mean(gr_b_invade[, "limpets"], na.rm=TRUE)
   r_bar_bl_l <- mean(gr_l_invade[, "limpets"], na.rm=TRUE) - mean(gr_l_invade[, "balanus_glandula"], na.rm=TRUE)
-  r_bar_bl_b; r_bar_bl_l
+  #r_bar_bl_b; r_bar_bl_l
   
   # chthamalus & limpets
   r_bar_cl_c <- mean(gr_c_invade[, "chthamalus_dalli"], na.rm=TRUE) - mean(gr_c_invade[, "limpets"], na.rm=TRUE)
   r_bar_cl_l <- mean(gr_l_invade[, "limpets"], na.rm=TRUE) - mean(gr_l_invade[, "chthamalus_dalli"], na.rm=TRUE)
-  r_bar_cl_c; r_bar_cl_l
+  #r_bar_cl_c; r_bar_cl_l
   return(list(r_bar_result = tibble(r_bar_species_1 = c(r_bar_bc_b, r_bar_bl_b, r_bar_cl_c),
                                     r_bar_species_2 = c(r_bar_bc_c, r_bar_bl_l, r_bar_cl_l),
                                     species_1 = c("balanus_glandula", "balanus_glandula", "chthamalus_dalli"),
-                                    species_2 = c("chthamalus_dalli", "limpets", limpets)),
+                                    species_2 = c("chthamalus_dalli", "limpets", "limpets")),
               var_average = tibble(var_b_average = mean(fd_results_1$larvae.B),
                                    var_c_average = mean(fd_results_1$larvae.C),
                                    var_l_average = mean(fd_results_1$larvae.L),
-                                   var_p_average = mean(fd_results_1$larvae.P))
+                                   var_p_average = mean(fd_results_1$larvae.P)),
+              
+              results_1 = fd_results_1,
+              results_2_b_invade = bind_rows(fd_results_ldr_b_absent, fd_results_ldr_b_invade),
+              results_2_c_invade = bind_rows(fd_results_ldr_c_absent, fd_results_ldr_c_invade),
+              results_2_l_invade = bind_rows(fd_results_ldr_l_absent, fd_results_ldr_l_invade),
+              results_2_p_invade = bind_rows(fd_results_ldr_p_absent, fd_results_ldr_p_invade)
+              
               )
          )
 }

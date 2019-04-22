@@ -2,7 +2,7 @@
 #### Source simulation functions ####
 
 source("foodwebs/intertidal_foodweb/intertidal_foodweb_model_modified.R")
-
+source("foodwebs/intertidal_foodweb/do_intertidal_partition.R")
 
 #### Run main scenario ####
 
@@ -152,109 +152,10 @@ dev.off()
 
 # will ultimately want to run this n=100 times
 
-# 1. run model to equilibrium
+# 1. run model to equilibrium, get low density growth rates for invader/resident combinations
+fd_part_1 <- do.intertidal.rbar()
 
-fd_results_1 <- do.intertidal.simulation(years_set = 500)
-
-
-# 2. low density growth rate calculation
-
-# balanus
-  # run without balanus adults or recruits -> equilibrium
-fd_results_ldr_b_absent <- do.intertidal.simulation(years_set = 500, B_1 = 0)
-  # set adult balanus population size very small (~1/1000 of usual size) and run using 
-  # densities from last time step
-fd_results_ldr_b_invade <- 
-  do.intertidal.simulation(years_set = 500, 
-                           B_1 = 1,
-                           C_1 = fd_results_ldr_b_absent$chthamalus_dalli[nrow(fd_results_ldr_b_absent)],
-                           L_1 = fd_results_ldr_b_absent$limpets[nrow(fd_results_ldr_b_absent)],
-                           W_1 = fd_results_ldr_b_absent$whelks[nrow(fd_results_ldr_b_absent)],
-                           P_1 = fd_results_ldr_b_absent$pisaster_ochraceus[nrow(fd_results_ldr_b_absent)],
-                           total_1 = fd_results_ldr_b_absent$free_space[nrow(fd_results_ldr_b_absent)]
-)
-# calculate low density growth rates
-gr_b_invade <- do.growth.rates(results = fd_results_ldr_b_invade, col_nums = c(2:6))
-
-
-# chthamalus
-fd_results_ldr_c_absent <- do.intertidal.simulation(years_set = 500, C_1 = 0)
-fd_results_ldr_c_invade <- 
-  do.intertidal.simulation(years_set = 500, 
-                           B_1 = fd_results_ldr_c_absent$balanus_glandula[nrow(fd_results_ldr_c_absent)],
-                           C_1 = 1,
-                           L_1 = fd_results_ldr_c_absent$limpets[nrow(fd_results_ldr_c_absent)],
-                           W_1 = fd_results_ldr_c_absent$whelks[nrow(fd_results_ldr_c_absent)],
-                           P_1 = fd_results_ldr_c_absent$pisaster_ochraceus[nrow(fd_results_ldr_c_absent)],
-                           total_1 = fd_results_ldr_c_absent$free_space[nrow(fd_results_ldr_c_absent)]
-  )
-# low density growthrates
-gr_c_invade <- do.growth.rates(results = fd_results_ldr_c_invade, col_nums = c(2:6))
-
-
-# limpets
-fd_results_ldr_l_absent <- do.intertidal.simulation(years_set = 500, L_1 = 0)
-fd_results_ldr_l_invade <- 
-  do.intertidal.simulation(years_set = 500, 
-                           B_1 = fd_results_ldr_l_absent$balanus_glandula[nrow(fd_results_ldr_l_absent)],
-                           C_1 = fd_results_ldr_l_absent$chthamalus_dalli[nrow(fd_results_ldr_l_absent)],
-                           L_1 = .001,
-                           W_1 = fd_results_ldr_l_absent$whelks[nrow(fd_results_ldr_l_absent)],
-                           P_1 = fd_results_ldr_l_absent$pisaster_ochraceus[nrow(fd_results_ldr_l_absent)],
-                           total_1 = fd_results_ldr_l_absent$free_space[nrow(fd_results_ldr_l_absent)]
-  )
-# low density growthrates
-gr_l_invade <- do.growth.rates(results = fd_results_ldr_l_invade, col_nums = c(2:6))
-
-
-# whelks
-fd_results_ldr_w_absent <- do.intertidal.simulation(years_set = 500, W_1 = 0)
-fd_results_ldr_w_invade <- 
-  do.intertidal.simulation(years_set = 500, 
-                           B_1 = fd_results_ldr_w_absent$balanus_glandula[nrow(fd_results_ldr_w_absent)],
-                           C_1 = fd_results_ldr_w_absent$chthamalus_dalli[nrow(fd_results_ldr_w_absent)],
-                           L_1 = fd_results_ldr_w_absent$limpets[nrow(fd_results_ldr_w_absent)],
-                           W_1 = .001,
-                           P_1 = fd_results_ldr_w_absent$pisaster_ochraceus[nrow(fd_results_ldr_w_absent)],
-                           total_1 = fd_results_ldr_w_absent$free_space[nrow(fd_results_ldr_w_absent)]
-  )
-# low density growthrates
-gr_w_invade <- do.growth.rates(results = fd_results_ldr_w_invade, col_nums = c(2:6))
-
-
-# sea stars (pisaster)
-fd_results_ldr_p_absent <- do.intertidal.simulation(years_set = 500, P_1 = 0)
-fd_results_ldr_p_invade <- 
-  do.intertidal.simulation(years_set = 500, 
-                           B_1 = fd_results_ldr_p_absent$balanus_glandula[nrow(fd_results_ldr_p_absent)],
-                           C_1 = fd_results_ldr_p_absent$chthamalus_dalli[nrow(fd_results_ldr_p_absent)],
-                           L_1 = fd_results_ldr_p_absent$limpets[nrow(fd_results_ldr_p_absent)],
-                           W_1 = fd_results_ldr_p_absent$whelks[nrow(fd_results_ldr_p_absent)],
-                           P_1 = .0001,
-                           total_1 = fd_results_ldr_p_absent$free_space[nrow(fd_results_ldr_p_absent)]
-  )
-# low density growthrates
-gr_p_invade <- do.growth.rates(results = fd_results_ldr_p_invade, col_nums = c(2:6))
-
-## pairwise coexistence strengths
-
-# balanus & chthamalus
-r_bar_bc_b <- mean(gr_b_invade[, "balanus_glandula"], na.rm=TRUE) - mean(gr_b_invade[, "chthamalus_dalli"], na.rm=TRUE)
-r_bar_bc_c <- mean(gr_c_invade[, "chthamalus_dalli"], na.rm=TRUE) - mean(gr_c_invade[, "balanus_glandula"], na.rm=TRUE)
-r_bar_bc_b; r_bar_bc_c
-
-# balanus & limpets
-r_bar_bl_b <- mean(gr_b_invade[, "balanus_glandula"], na.rm=TRUE) - mean(gr_b_invade[, "limpets"], na.rm=TRUE)
-r_bar_bl_l <- mean(gr_l_invade[, "limpets"], na.rm=TRUE) - mean(gr_l_invade[, "balanus_glandula"], na.rm=TRUE)
-r_bar_bl_b; r_bar_bl_l
-
-# chthamalus & limpets
-r_bar_cl_c <- mean(gr_c_invade[, "chthamalus_dalli"], na.rm=TRUE) - mean(gr_c_invade[, "limpets"], na.rm=TRUE)
-r_bar_cl_l <- mean(gr_l_invade[, "limpets"], na.rm=TRUE) - mean(gr_l_invade[, "chthamalus_dalli"], na.rm=TRUE)
-r_bar_cl_c; r_bar_cl_l
-
-
-# 3. Partition coexistence
+# 2. Partition coexistence
 
 # Have four varying coexistence mechanisms:
 # variation in: balanus, chthamalus, limpet, and pisaster recruitment
@@ -262,15 +163,15 @@ r_bar_cl_c; r_bar_cl_l
 # Start just by asking, what happens when competitor recruitment variation removed 
 # vs. predator variation removed?
 
-# 3a. Set all varying parameters to long term average, run steps 1-2 again
-# 3b. Set only "variation in competitor recruitment" = 0, run steps 1-2 again
-# 3c. Set only "variation in predator population size" = 0, run steps 1-2 again
+# a. Set all varying parameters to long term average, run steps 1-2 again
+# b. Set only "variation in competitor recruitment" = 0, run steps 1-2 again
+# c. Set only "variation in predator population size" = 0, run steps 1-2 again
 
-# 3a. Set all varying parameters to long term average, run steps 1-2 again
+# a. Set all varying parameters to long term average, run steps 1-2 again
 
 # long term averages:
 
 # run model to equilibrium:
-fd_results_1 <- do.intertidal.simulation(years_set = 500)
+
 
 
