@@ -3,6 +3,7 @@
 
 source("foodwebs/intertidal_foodweb/intertidal_foodweb_model_modified.R")
 
+
 #### Run main scenario ####
 
 fd_results <- do.intertidal.simulation()
@@ -149,6 +150,8 @@ dev.off()
 
 #### Partition coexistence #####
 
+# will ultimately want to run this n=100 times
+
 # 1. run model to equilibrium
 
 fd_results_1 <- do.intertidal.simulation(years_set = 500)
@@ -263,5 +266,11 @@ r_bar_cl_c; r_bar_cl_l
 # 3b. Set only "variation in competitor recruitment" = 0, run steps 1-2 again
 # 3c. Set only "variation in predator population size" = 0, run steps 1-2 again
 
+# 3a. Set all varying parameters to long term average, run steps 1-2 again
+
+# long term averages:
+
+# run model to equilibrium:
+fd_results_1 <- do.intertidal.simulation(years_set = 500)
 
 

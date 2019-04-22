@@ -247,21 +247,25 @@ do.intertidal.simulation <- function(
   # B.stdev <- sqrt(4.6*10^9)
   location.B <- log(B.mean^2 / sqrt(B.stdev^2 + B.mean^2))
   shape.B <- sqrt(log(1 + (B.stdev^2 / B.mean^2)))
+  larvae.B <- rlnorm(n=timesteps, location.B, shape.B)
   
   # C.mean <- 70000
   # C.stdev <- sqrt(2.75*10^9)
   location.C <- log(C.mean^2 / sqrt(C.stdev^2 + C.mean^2))
   shape.C <- sqrt(log(1 + (C.stdev^2 / C.mean^2)))
+  larvae.C <- rlnorm(n=timesteps, location.C, shape.C)
   
   # L.mean <- 3000
   # L.stdev <- sqrt(3.8*10^6)
   location.L <- log(L.mean^2 / sqrt(L.stdev^2 + L.mean^2))
   shape.L <- sqrt(log(1 + (L.stdev^2 / L.mean^2)))
+  larvae.L <- rlnorm(n=timesteps, location.L, shape.L)
   
   # P.mean <- 727
   # P.stdev <- sqrt(3.4*10^5)
   location.P <- log(P.mean^2 / sqrt(P.stdev^2 + P.mean^2))
   shape.P <- sqrt(log(1 + (P.stdev^2 / P.mean^2)))
+  larvae.P <- rlnorm(n=timesteps, location.P, shape.P)
   
   
   # to try to understand dynamics, want to track each variable at each time step
@@ -280,21 +284,25 @@ do.intertidal.simulation <- function(
     W.recruits = rep(NA, timesteps),
     W = rep(NA, timesteps),
     P = rep(NA, timesteps),
-    free = rep(NA, timesteps)
+    free = rep(NA, timesteps),
+    larvae.B = larvae.B,
+    larvae.C = larvae.C,
+    larvae.L = larvae.L,
+    larvae.P = larvae.P
   )
   
   for (t in 2:timesteps) {
     B.potential.recruits <- do.potential.recruitment(free=free[t-1], size.x=size.B, size.recruit.x=size.recruit.B, 
                                                      larvae.x= ifelse(is.null(var_B),
-                                                                      rlnorm(n=1, location.B, shape.B),
+                                                                      larvae.B[t],
                                                                       var_B))
     C.potential.recruits <- do.potential.recruitment(free=free[t-1], size.x=size.C, size.recruit.x=size.recruit.C, 
                                                      larvae.x=ifelse(is.null(var_C),
-                                                                     rlnorm(n=1, location.C, shape.C),
+                                                                     larvae.C[t],
                                                                      var_C))
     L.potential.recruits <- do.potential.recruitment(free=free[t-1], size.x=size.L, size.recruit.x=size.recruit.L, 
                                                      larvae.x=ifelse(is.null(var_L),
-                                                                     rlnorm(n=1, location.L, shape.L),
+                                                                     larvae.L[t],
                                                                      var_L))
     
     # note that there are more recruits than potential recruits :(
@@ -305,7 +313,7 @@ do.intertidal.simulation <- function(
     L.recruits <- do.actual.recruitment(free=free[t-1], L= L.potential.recruits, 
                                         C = settlement.L)
     P.recruits <- ifelse(is.null(var_P),
-                         rlnorm(n=1, location.P, shape.P),
+                         larvae.P[t],
                          var_P)
     
     
@@ -367,7 +375,11 @@ do.intertidal.simulation <- function(
                        limpets = L,
                        whelks = W,
                        pisaster_ochraceus = P,
-                       free_space = free)
+                       free_space = free,
+                       larvae.B = larvae.B,
+                       larvae.C = larvae.C,
+                       larvae.L = larvae.L,
+                       larvae.P = larvae.P)
   return(fd_results)
   
 }
