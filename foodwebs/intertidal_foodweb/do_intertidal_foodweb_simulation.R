@@ -200,18 +200,8 @@ list(r_bar = fd_part_1$r_bar_result,
   bind_rows(.id = "id") -> fd_part_df
 
 fd_part_df  %>%
-  unite(col = "sp_pair", species_1, species_2, sep = "-", remove = FALSE) %>%
-  select(-r_bar_species_2, -species_2) %>%
-  rename(species = species_1) %>%
-  spread(key = "id", value = r_bar_species_1) %>%
-  mutate(delta_cp = r_bar - (delta_0 + delta_c + delta_p)) -> fd_part_df_1
-fd_part_df  %>%
-  unite(col = "sp_pair", species_1, species_2, sep = "-", remove = FALSE) %>%
-  select(-r_bar_species_1, -species_1) %>%
-  rename(species = species_2) %>%
-  spread(key = "id", value = r_bar_species_2) %>%
-  mutate(delta_cp = r_bar - (delta_0 + delta_c + delta_p)) %>%
-  bind_rows(fd_part_df_1) -> fd_part_total
+  spread(key = "id", value = r_bar) %>%
+  mutate(delta_cp = r_bar - (delta_0 + delta_c + delta_p)) -> fd_part_total
 
 fd_part_total %>%
   gather(delta_0:delta_cp, key = "coexistence_partition", value = "coexistence_strength") %>%
@@ -268,18 +258,8 @@ list(r_bar = fd_part_1$r_bar_result,
   bind_rows(.id = "id") -> fd_part_3_df
 
 fd_part_3_df  %>%
-  unite(col = "sp_pair", species_1, species_2, sep = "-", remove = FALSE) %>%
-  select(-r_bar_species_2, -species_2) %>%
-  rename(species = species_1) %>%
-  spread(key = "id", value = r_bar_species_1) %>%
-  mutate(delta_cp = r_bar - (delta_0 + delta_c + delta_p)) -> fd_part_3_df_1
-fd_part_3_df  %>%
-  unite(col = "sp_pair", species_1, species_2, sep = "-", remove = FALSE) %>%
-  select(-r_bar_species_1, -species_1) %>%
-  rename(species = species_2) %>%
-  spread(key = "id", value = r_bar_species_2) %>%
-  mutate(delta_cp = r_bar - (delta_0 + delta_c + delta_p)) %>%
-  bind_rows(fd_part_3_df_1) -> fd_part_3_total
+  spread(key = "id", value = r_bar) %>%
+  mutate(delta_cp = r_bar - (delta_0 + delta_c + delta_p)) -> fd_part_3_total
 
 fd_part_3_total %>%
   gather(delta_0:delta_cp, key = "coexistence_partition", value = "coexistence_strength") %>%
@@ -291,6 +271,7 @@ fd_part_3_total %>%
   facet_grid( ~ species) +
   geom_hline(yintercept = 0) +
   theme(legend.position = "none")
+
 
 
 #### Compare: coexistence via variation in predation vs. variation in predator recruitment ####
@@ -320,7 +301,10 @@ bind_rows(fd_1, fd_3) %>%
 
 simulation_loop_output <- vector(mode = "list", length = 100)
 
-for (i in 1:length(simulation_loop_output)) {
+for (i in 71:length(simulation_loop_output)) {
+  
+  print(i)
+  
   # run model to equilibrium, get low density growth rates for invader/resident combinations
   fd_tmp_1 <- do.intertidal.rbar()
   
@@ -363,16 +347,29 @@ for (i in 1:length(simulation_loop_output)) {
     bind_rows(.id = "id") -> fd_tmp_3_df
   
   fd_tmp_3_df  %>%
-    unite(col = "sp_pair", species_1, species_2, sep = "-", remove = FALSE) %>%
-    select(-r_bar_species_2, -species_2) %>%
-    rename(species = species_1) %>%
-    spread(key = "id", value = r_bar_species_1) %>%
-    mutate(delta_cp = r_bar - (delta_0 + delta_c + delta_p)) -> fd_tmp_3_df_1
-  fd_tmp_3_df  %>%
-    unite(col = "sp_pair", species_1, species_2, sep = "-", remove = FALSE) %>%
-    select(-r_bar_species_1, -species_1) %>%
-    rename(species = species_2) %>%
-    spread(key = "id", value = r_bar_species_2) %>%
-    mutate(delta_cp = r_bar - (delta_0 + delta_c + delta_p)) %>%
-    bind_rows(fd_tmp_3_df_1) -> simulation_loop_output[[i]]
+    spread(key = "id", value = r_bar) %>%
+    mutate(delta_cp = r_bar - (delta_0 + delta_c + delta_p)) -> simulation_loop_output[[i]]
 }
+
+
+names(simulation_loop_output) <- paste0("loop_", 1:length(simulation_loop_output))
+
+simulation_loop_output[1:70] %>%
+  map(gather, delta_0:delta_cp, key = "coexistence_partition", value = "coexistence_strength") %>%
+  map(mutate, coexistence_partition = factor(coexistence_partition, levels = c("r_bar", 
+                                                                          "delta_0", "delta_c", 
+                                                                          "delta_p", "delta_cp"))) %>%
+  bind_rows(.id = "simulation_loop") %>%
+  group_by(coexistence_partition, species) %>%
+  summarise(mean_cs = mean(coexistence_strength),
+            sd_cs = sd(coexistence_strength),
+            n_cs = n()) %>%
+  mutate(se_cs = sd_cs/sqrt(n_cs)) %>%
+  ggplot(aes(x = coexistence_partition, y = mean_cs, color = coexistence_partition)) +
+  geom_bar(stat = "identity", aes(fill = coexistence_partition)) + 
+  geom_errorbar(aes(ymin = mean_cs - se_cs, ymax = mean_cs + se_cs), color = "black", width = 0.2) +
+  facet_grid( ~ species) +
+  geom_hline(yintercept = 0) +
+  theme(legend.position = "none") + 
+  labs(x = "", y = "")
+
