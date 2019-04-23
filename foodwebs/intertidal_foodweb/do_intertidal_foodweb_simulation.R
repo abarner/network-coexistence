@@ -180,23 +180,86 @@ fd_part_2a <- do.intertidal.all.average(var_P_input = fd_part_1_var_P,
                                         var_B_input = fd_part_1_var_B, 
                                         var_C_input = fd_part_1_var_C, 
                                         var_L_input = fd_part_1_var_L)
-fd_part_2a$r_bar_result
 
-do.growth.rates(results = test, col_nums = c(2:6))
-fd_part_2a$results_2_l_invade %>% 
-  mutate(time_s = seq(1:n())) %>%
-  filter(time_s > 6000) -> test
+# set variation in competitor recruitment to average (constant)
+fd_part_2b <- do.intertidal.all.average(var_P_input = NULL, 
+                                        var_B_input = fd_part_1_var_B, 
+                                        var_C_input = fd_part_1_var_C, 
+                                        var_L_input = fd_part_1_var_L)
+
+# set variation in predator recruitment to average(constant)
+fd_part_2c <- do.intertidal.all.average(var_P_input = fd_part_1_var_P, 
+                                        var_B_input = NULL, 
+                                        var_C_input = NULL, 
+                                        var_L_input = NULL)
+
+list(r_bar = fd_part_1$r_bar_result,
+     delta_0 = fd_part_2a$r_bar_result,
+     delta_p = fd_part_2b$r_bar_result,
+     delta_c = fd_part_2c$r_bar_result) %>%
+  bind_rows(.id = "id") -> fd_part_df
+
+fd_part_df  %>%
+  unite(col = "sp_pair", species_1, species_2, sep = "-", remove = FALSE) %>%
+  select(-r_bar_species_2, -species_2) %>%
+  rename(species = species_1) %>%
+  spread(key = "id", value = r_bar_species_1) %>%
+  mutate(delta_cp = r_bar - (delta_0 + delta_c + delta_p)) -> fd_part_df_1
+fd_part_df  %>%
+  unite(col = "sp_pair", species_1, species_2, sep = "-", remove = FALSE) %>%
+  select(-r_bar_species_1, -species_1) %>%
+  rename(species = species_2) %>%
+  spread(key = "id", value = r_bar_species_2) %>%
+  mutate(delta_cp = r_bar - (delta_0 + delta_c + delta_p)) %>%
+  bind_rows(fd_part_df_1) -> fd_part_total
+
+fd_part_total %>%
+  gather(delta_0:delta_cp, key = "coexistence_partition", value = "coexistence_strength") %>%
+  mutate(coexistence_partition = factor(coexistence_partition, levels = c("r_bar", 
+                                                                           "delta_0", "delta_c", 
+                                                                           "delta_p", "delta_cp"))) %>%
+  ggplot(aes(x = coexistence_partition, y = coexistence_strength, color = coexistence_partition)) +
+  geom_bar(stat = "identity", aes(fill = coexistence_partition)) + 
+  facet_grid( ~ species) +
+  geom_hline(yintercept = 0) +
+  scale_x_discrete(labels=xlab) +
+  theme(legend.position = "none")
 
 
-fd_part_2a$results_2_l_invade %>% 
-  gather(balanus_glandula:pisaster_ochraceus, key = "species", value = "abundance") %>%
-  #filter(time > 5900) %>%
-  ggplot(aes(x = time, y = abundance, color = species)) + 
-  geom_point() + geom_line()
 
-fd_part_2a$results_2_b_invade %>% 
-  gather(balanus_glandula:pisaster_ochraceus, key = "species", value = "abundance") %>%
-  #filter(time > 5900) %>%
-  ggplot(aes(x = time, y = abundance, color = species)) + 
-  geom_point() + geom_line()
+
+
+
+#### pick up here ####
+
+
+# consider predator removal completely
+# get long term averages:
+fd_part_1_var_C <- mean(fd_part_1$results_1$larvae.C)
+fd_part_1_var_B <- mean(fd_part_1$results_1$larvae.B)
+fd_part_1_var_L <- mean(fd_part_1$results_1$larvae.L)
+fd_part_1_P_avg <- mean(fd_part_1$results_1$pisaster_ochraceus)
+fd_part_1_W_avg <- mean(fd_part_1$results_1$whelks)
+
+# run model to equilibrium and get long term and low density growth rates
+fd_part_3a <- do.intertidal.predator.removal(var_B_input = fd_part_1_var_B, 
+                                        var_C_input = fd_part_1_var_C, 
+                                        var_L_input = fd_part_1_var_L)
+
+# set variation in competitor recruitment to average (constant)
+fd_part_3b <- do.intertidal.predator.removal(var_B_input = fd_part_1_var_B, 
+                                        var_C_input = fd_part_1_var_C, 
+                                        var_L_input = fd_part_1_var_L)
+
+# set variation in predator ABUNDANCE to average(constant)
+fd_part_3c <- do.intertidal.predator.removal(var_B_input = NULL, 
+                                        var_C_input = NULL, 
+                                        var_L_input = NULL)
+
+
+
+
+
+
+
 

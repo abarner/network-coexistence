@@ -172,6 +172,9 @@ do.intertidal.simulation <- function(
   var_C = NULL, # for chthamalus recruitment
   var_L = NULL, # for limpet recruitment
   
+  P_avg = NULL, # if want constant value for predator abundance, set value here
+  W_avg = NULL,
+  
   B_1 = 4100, # defaults to starting conditions given by forde & doak
   C_1 = 11000,
   L_1 = 239,
@@ -324,6 +327,7 @@ do.intertidal.simulation <- function(
     L[t] <- do.population.size.limpets(S=survival.L, L.prev=L[t-1], S.r=survival.recruit.L, R=L.recruits, 
                                        delta=delta)
     
+    # do whelk recruitment only in june
     if(month[t] == "Jun") {
       W.recruits <- do.whelk.recruitment(avg.C=mean(c(C[t], C[t-1], C[t-2])), 
                                          avg.B=mean(c(B[t], B[t-1], B[t-2])),
@@ -333,11 +337,20 @@ do.intertidal.simulation <- function(
       W.recruits <- 0
     }
     
-    W[t] <- do.population.size.whelks(W.prev=W[t-1],
-                                      S = survival.W,
-                                      R=W.recruits)
+    # if holding predation constant...
+    if (is.null(W_avg)) {
+      W[t] <- do.population.size.whelks(W.prev=W[t-1],
+                                        S = survival.W,
+                                        R=W.recruits)
+    } else {
+      W[t] <- W_avg
+    }
     
-    P[t] <- do.population.size.seastar(S=survival.P, P.prev=P[t-1], R=P.recruits)
+    if (is.null(P_avg)) {
+      P[t] <- do.population.size.seastar(S=survival.P, P.prev=P[t-1], R=P.recruits)
+    } else {
+      P[t] <- P_avg
+    }
     
     # to do coexistence invasion, need ability to set starting (and total) population size
     # to 0
