@@ -148,7 +148,7 @@ dev.off()
 
 
 
-#### Partition coexistence #####
+#### Partition coexistence - variation in predator recruitment #####
 
 # will ultimately want to run this n=100 times
 
@@ -222,44 +222,157 @@ fd_part_total %>%
   geom_bar(stat = "identity", aes(fill = coexistence_partition)) + 
   facet_grid( ~ species) +
   geom_hline(yintercept = 0) +
-  scale_x_discrete(labels=xlab) +
   theme(legend.position = "none")
 
 
 
-
-
-
-#### pick up here ####
-
+#### Partition coexistence - variation in total predator abundance ####
 
 # consider predator removal completely
 # get long term averages:
 fd_part_1_var_C <- mean(fd_part_1$results_1$larvae.C)
 fd_part_1_var_B <- mean(fd_part_1$results_1$larvae.B)
 fd_part_1_var_L <- mean(fd_part_1$results_1$larvae.L)
+fd_part_1_var_P <- mean(fd_part_1$results_1$larvae.P)
 fd_part_1_P_avg <- mean(fd_part_1$results_1$pisaster_ochraceus)
 fd_part_1_W_avg <- mean(fd_part_1$results_1$whelks)
 
 # run model to equilibrium and get long term and low density growth rates
 fd_part_3a <- do.intertidal.predator.removal(var_B_input = fd_part_1_var_B, 
-                                        var_C_input = fd_part_1_var_C, 
-                                        var_L_input = fd_part_1_var_L)
+                                             var_C_input = fd_part_1_var_C, 
+                                             var_L_input = fd_part_1_var_L,
+                                             var_P_input = fd_part_1_var_P,
+                                             P_avg_input = fd_part_1_P_avg,
+                                             W_avg_input = fd_part_1_W_avg)
 
 # set variation in competitor recruitment to average (constant)
 fd_part_3b <- do.intertidal.predator.removal(var_B_input = fd_part_1_var_B, 
                                         var_C_input = fd_part_1_var_C, 
-                                        var_L_input = fd_part_1_var_L)
+                                        var_L_input = fd_part_1_var_L,
+                                        var_P_input = NULL,
+                                        P_avg_input = NULL,
+                                        W_avg_input = NULL)
 
 # set variation in predator ABUNDANCE to average(constant)
 fd_part_3c <- do.intertidal.predator.removal(var_B_input = NULL, 
                                         var_C_input = NULL, 
-                                        var_L_input = NULL)
+                                        var_L_input = NULL,
+                                        var_P_input = fd_part_1_var_P,
+                                        P_avg_input = fd_part_1_P_avg,
+                                        W_avg_input = fd_part_1_W_avg)
+
+list(r_bar = fd_part_1$r_bar_result,
+     delta_0 = fd_part_3a$r_bar_result,
+     delta_p = fd_part_3b$r_bar_result,
+     delta_c = fd_part_3c$r_bar_result) %>%
+  bind_rows(.id = "id") -> fd_part_3_df
+
+fd_part_3_df  %>%
+  unite(col = "sp_pair", species_1, species_2, sep = "-", remove = FALSE) %>%
+  select(-r_bar_species_2, -species_2) %>%
+  rename(species = species_1) %>%
+  spread(key = "id", value = r_bar_species_1) %>%
+  mutate(delta_cp = r_bar - (delta_0 + delta_c + delta_p)) -> fd_part_3_df_1
+fd_part_3_df  %>%
+  unite(col = "sp_pair", species_1, species_2, sep = "-", remove = FALSE) %>%
+  select(-r_bar_species_1, -species_1) %>%
+  rename(species = species_2) %>%
+  spread(key = "id", value = r_bar_species_2) %>%
+  mutate(delta_cp = r_bar - (delta_0 + delta_c + delta_p)) %>%
+  bind_rows(fd_part_3_df_1) -> fd_part_3_total
+
+fd_part_3_total %>%
+  gather(delta_0:delta_cp, key = "coexistence_partition", value = "coexistence_strength") %>%
+  mutate(coexistence_partition = factor(coexistence_partition, levels = c("r_bar", 
+                                                                          "delta_0", "delta_c", 
+                                                                          "delta_p", "delta_cp"))) %>%
+  ggplot(aes(x = coexistence_partition, y = coexistence_strength, color = coexistence_partition)) +
+  geom_bar(stat = "identity", aes(fill = coexistence_partition)) + 
+  facet_grid( ~ species) +
+  geom_hline(yintercept = 0) +
+  theme(legend.position = "none")
 
 
+#### Compare: coexistence via variation in predation vs. variation in predator recruitment ####
+
+fd_part_total %>%
+  gather(delta_0:delta_cp, key = "coexistence_partition", value = "coexistence_strength") %>%
+  mutate(coexistence_partition = factor(coexistence_partition, levels = c("r_bar", 
+                                                                          "delta_0", "delta_c", 
+                                                                          "delta_p", "delta_cp")),
+         predation = "variation in predator recruitment") -> fd_1
+fd_part_3_total %>%
+  gather(delta_0:delta_cp, key = "coexistence_partition", value = "coexistence_strength") %>%
+  mutate(coexistence_partition = factor(coexistence_partition, levels = c("r_bar", 
+                                                                          "delta_0", "delta_c", 
+                                                                          "delta_p", "delta_cp")),
+         predation = "variation in total predator abundance") -> fd_3
+
+bind_rows(fd_1, fd_3) %>%
+  ggplot(aes(x = coexistence_partition, y = coexistence_strength, color = coexistence_partition)) +
+  geom_bar(stat = "identity", aes(fill = coexistence_partition)) + 
+  facet_grid(predation ~ species) +
+  geom_hline(yintercept = 0) +
+  theme(legend.position = "none")
 
 
+#### Run coexistence scenarios multiple times ####
 
+simulation_loop_output <- vector(mode = "list", length = 100)
 
-
-
+for (i in 1:length(simulation_loop_output)) {
+  # run model to equilibrium, get low density growth rates for invader/resident combinations
+  fd_tmp_1 <- do.intertidal.rbar()
+  
+  # get long term averages:
+  fd_tmp_1_var_C <- mean(fd_tmp_1$results_1$larvae.C)
+  fd_tmp_1_var_B <- mean(fd_tmp_1$results_1$larvae.B)
+  fd_tmp_1_var_L <- mean(fd_tmp_1$results_1$larvae.L)
+  fd_tmp_1_var_P <- mean(fd_tmp_1$results_1$larvae.P)
+  fd_tmp_1_P_avg <- mean(fd_tmp_1$results_1$pisaster_ochraceus)
+  fd_tmp_1_W_avg <- mean(fd_tmp_1$results_1$whelks)
+  
+  # run model to equilibrium and get long term and low density growth rates
+  fd_tmp_3a <- do.intertidal.predator.removal(var_B_input = fd_tmp_1_var_B, 
+                                              var_C_input = fd_tmp_1_var_C, 
+                                              var_L_input = fd_tmp_1_var_L,
+                                              var_P_input = fd_tmp_1_var_P,
+                                              P_avg_input = fd_tmp_1_P_avg,
+                                              W_avg_input = fd_tmp_1_W_avg)
+  
+  # set variation in competitor recruitment to average (constant)
+  fd_tmp_3b <- do.intertidal.predator.removal(var_B_input = fd_tmp_1_var_B, 
+                                              var_C_input = fd_tmp_1_var_C, 
+                                              var_L_input = fd_tmp_1_var_L,
+                                              var_P_input = NULL,
+                                              P_avg_input = NULL,
+                                              W_avg_input = NULL)
+  
+  # set variation in predator ABUNDANCE to average(constant)
+  fd_tmp_3c <- do.intertidal.predator.removal(var_B_input = NULL, 
+                                              var_C_input = NULL, 
+                                              var_L_input = NULL,
+                                              var_P_input = fd_tmp_1_var_P,
+                                              P_avg_input = fd_tmp_1_P_avg,
+                                              W_avg_input = fd_tmp_1_W_avg)
+  
+  list(r_bar = fd_tmp_1$r_bar_result,
+       delta_0 = fd_tmp_3a$r_bar_result,
+       delta_p = fd_tmp_3b$r_bar_result,
+       delta_c = fd_tmp_3c$r_bar_result) %>%
+    bind_rows(.id = "id") -> fd_tmp_3_df
+  
+  fd_tmp_3_df  %>%
+    unite(col = "sp_pair", species_1, species_2, sep = "-", remove = FALSE) %>%
+    select(-r_bar_species_2, -species_2) %>%
+    rename(species = species_1) %>%
+    spread(key = "id", value = r_bar_species_1) %>%
+    mutate(delta_cp = r_bar - (delta_0 + delta_c + delta_p)) -> fd_tmp_3_df_1
+  fd_tmp_3_df  %>%
+    unite(col = "sp_pair", species_1, species_2, sep = "-", remove = FALSE) %>%
+    select(-r_bar_species_1, -species_1) %>%
+    rename(species = species_2) %>%
+    spread(key = "id", value = r_bar_species_2) %>%
+    mutate(delta_cp = r_bar - (delta_0 + delta_c + delta_p)) %>%
+    bind_rows(fd_tmp_3_df_1) -> simulation_loop_output[[i]]
+}
