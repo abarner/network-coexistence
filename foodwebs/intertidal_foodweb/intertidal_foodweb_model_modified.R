@@ -158,14 +158,16 @@ do.intertidal.simulation <- function(
   settlement.C = .002 * 30 * 24,
   settlement.L = .0002 * 30 * 24,
   
+  # all means set to "high" recruitment scenarios 
+  # (from forde & doak table 1)
   B.mean = 90000,
-  B.stdev = sqrt(4.6*10^9),
+  B.stdev = 67823,
   C.mean = 70000,
-  C.stdev = sqrt(2.75*10^9),
+  C.stdev = 52440,
   L.mean = 3000,
-  L.stdev = sqrt(3.8*10^6),
-  P.mean = 727,
-  P.stdev = sqrt(3.4*10^5),
+  L.stdev = 1949,
+  P.mean = 6873,
+  P.stdev = 5495,
   
   var_P = NULL, # if want constant value for pisaster recruitment, set value here
   var_B = NULL, # for balanus recruitment
@@ -194,7 +196,7 @@ do.intertidal.simulation <- function(
   size.recruit.C <- .000003
   size.recruit.L <- .000003
   
-  survival.B <- .7
+  survival.B <- .8 # asymmetry based on connell 1961
   survival.C <- .7
   survival.L <- .97
   survival.W <- .94
@@ -210,7 +212,7 @@ do.intertidal.simulation <- function(
   # vs Figures from Menge et al. 2011 JEMBE (50-100 recruits / 100 cm2)
   # so should be about ~ an order of magnitude lower than barnacle settlement?
   
-  survival.recruit.B <- .7
+  survival.recruit.B <- .8 # asymmetry based on connell 1961
   survival.recruit.C <- .7
   survival.recruit.L <- .88
   survival.recruit.W <- .88
@@ -220,9 +222,12 @@ do.intertidal.simulation <- function(
   # 1.46 x 10-9/m2/year, and annual mortality of gametes is 0.999
   
   delta <- -.02 # density dependence for limpets
-  p.whelk <- .001 # per capita whelk predation rate
+  p.whelk.b <- .002 # per capita whelk predation rate on balanus (asymmetry from connell 1961)
+  p.whelk.c <- .001 # per capita whelk predation rate
   Y <- .001 # whelk conversion rate
-  p.seastar <- .007 # per capita whelk predation rate
+  p.seastar.b <- .008 # per capita sea star predation rate (asymmetry from navarrete)
+  p.seastar.c <- .007 # per capita sea star predation rate
+  # predation rates on balanus & chthamalus are the same
   
   total <- total_1
   

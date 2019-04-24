@@ -218,6 +218,8 @@ fd_part_total %>%
 
 #### Partition coexistence - variation in total predator abundance ####
 
+fd_part_1 <- do.intertidal.rbar()
+
 # consider predator removal completely
 # get long term averages:
 fd_part_1_var_C <- mean(fd_part_1$results_1$larvae.C)
