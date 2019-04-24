@@ -275,6 +275,10 @@ fd_part_3_total %>%
   theme(legend.position = "none")
 
 
+## note: I fiddled a bit with strengthening the predation rate asymmetry between balanus and chthamalus
+# and it doesn't seem to make a huge difference in the qualitative results.
+# increasing the survival rate of balanus also caused limpets to not coexist
+
 
 #### Compare: coexistence via variation in predation vs. variation in predator recruitment ####
 
