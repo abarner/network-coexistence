@@ -2,6 +2,7 @@
 # Compare positive, no, and negative autocorrelation
 # For tree species mortality rates through time (e.g. from Vasseur and Fox appendix)
 
+library(deSolve)
 # ----------------------------------------------------------------------------------------------------
 # Run model with both species to get overall dynamics
 
@@ -30,10 +31,6 @@ J_C1 = 0.8036
 J_C2 = 0.7
 # predator ingestion rate
 J_P = 0.4
-# medial consumer 1 mortality rate
-M_C1 = M_C1
-# medial consumer 2 mortality rate
-M_C2 = M_C2
 # predator mortality rate
 M_P = 0.08
 # half saturation constant
@@ -41,12 +38,12 @@ R_0_1 = 0.16129
 R_0_2 = 0.9
 C_0 = 0.5
 # preference coefficient
-O_P_C1 = 0.92
+O_P_C1 = 0.9
 O_C1_R = 1.0
 O_C2_R = 0.98
 
 # strength of env. on mortality rate
-sigma=0.55
+sigma=0.1
 
 # cross-correlation of C1 and C2
 rho=0
@@ -56,7 +53,7 @@ time  <- 5000 # number of timesteps to run the model
 # ----------------------------------------------------------------------------------------------------
 # looping over multiple runs
 
-runs <- 5
+runs <- 100
 C1_final_mechanisms <- matrix(data=NA, nrow=runs, ncol=5)
 C2_final_mechanisms <- matrix(data=NA, nrow=runs, ncol=5)
 colnames(C1_final_mechanisms ) <- c("C1_r_bar", "C1_delta_0", "C1_delta_P", "C1_delta_E", "C1_delta_EP")
@@ -574,12 +571,7 @@ for (run_loop in 1:runs) {
   C1_final_mechanisms[run_loop,] <- C1_results
   C2_final_mechanisms[run_loop,] <- C2_results
   
-  # print how far we've come
-  if(run_loop%%50==0) {
-    print(run_loop)
-  }
 
 }
 
-# ----------------------------------------------------------------------------------------------------
-# to plot run plotting_mechanisms.R
+save(C1_final_mechanisms, C2_final_mechanisms, sigma, O_P_C1, file="MSI_sigma1_omega90.RData")
