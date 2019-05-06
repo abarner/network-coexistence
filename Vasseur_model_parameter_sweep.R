@@ -624,6 +624,10 @@ write.csv(C2_space, file = here("foodwebs", "cr_variation_examplecode_files",
 heatmap(coexistence_space)
 # ----------------------------------------------------------------------------------------------------
 # to plot run plotting_mechanisms.R
+coexistence_space <- read.csv(file = here("foodwebs", "cr_variation_examplecode_files", 
+                     "mechanism_figs", "parameter_sweep.csv"))
+
+coexistence_space <- as.matrix(coexistence_space)
 library(plot3D)
 
 quartz(width=6, height=6)
