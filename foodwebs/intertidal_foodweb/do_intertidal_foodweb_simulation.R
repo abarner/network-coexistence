@@ -4,6 +4,12 @@
 source("foodwebs/intertidal_foodweb/intertidal_foodweb_model_modified.R")
 source("foodwebs/intertidal_foodweb/do_intertidal_partition.R")
 
+
+#### Load packages @@@@
+
+library(tidyverse)
+
+
 #### Run main scenario ####
 
 fd_results <- do.intertidal.simulation()
@@ -295,15 +301,18 @@ fd_part_3_total %>%
                                                                           "delta_p", "delta_cp")),
          predation = "variation in total predator abundance") -> fd_3
 
+#pdf(file = "intertidal_partition_comparison_1run.pdf", width = 11, height = 8.5)
 bind_rows(fd_1, fd_3) %>%
   ggplot(aes(x = coexistence_partition, y = coexistence_strength, color = coexistence_partition)) +
   geom_bar(stat = "identity", aes(fill = coexistence_partition)) + 
   facet_grid(predation ~ species) +
   geom_hline(yintercept = 0) +
   theme(legend.position = "none")
-
+#dev.off()
 
 #### Run coexistence scenarios multiple times ####
+
+## note: double check which TYPE of scenario was run?????, compared with pdf?
 
 simulation_loop_output <- vector(mode = "list", length = 100)
 
@@ -360,6 +369,7 @@ for (i in 71:length(simulation_loop_output)) {
 
 names(simulation_loop_output) <- paste0("loop_", 1:length(simulation_loop_output))
 
+#pdf("intertidal_partition_test.pdf", width = 10, height = 6)
 simulation_loop_output[1:70] %>%
   map(gather, delta_0:delta_cp, key = "coexistence_partition", value = "coexistence_strength") %>%
   map(mutate, coexistence_partition = factor(coexistence_partition, levels = c("r_bar", 
@@ -374,8 +384,9 @@ simulation_loop_output[1:70] %>%
   ggplot(aes(x = coexistence_partition, y = mean_cs, color = coexistence_partition)) +
   geom_bar(stat = "identity", aes(fill = coexistence_partition)) + 
   geom_errorbar(aes(ymin = mean_cs - se_cs, ymax = mean_cs + se_cs), color = "black", width = 0.2) +
-  facet_grid( ~ species) +
+  facet_wrap( ~ species, scales = "free") +
   geom_hline(yintercept = 0) +
   theme(legend.position = "none") + 
   labs(x = "", y = "")
+#dev.off()
 
