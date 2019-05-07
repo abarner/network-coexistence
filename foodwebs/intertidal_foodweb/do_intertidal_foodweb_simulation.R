@@ -679,5 +679,56 @@ for (i in 1:length(simulation_loop_output_low)) {
     mutate(delta_cp = r_bar - (delta_0 + delta_c + delta_p)) -> simulation_loop_output_low[[i]]
 }
 
+# process results
 
+simulation_loop_output_low %>%
+  map(gather, delta_0:delta_cp, key = "coexistence_partition", value = "coexistence_strength") %>%
+  map(mutate, coexistence_partition = factor(coexistence_partition, levels = c("r_bar", 
+                                                                               "delta_0", "delta_c", 
+                                                                               "delta_p", "delta_cp"))) %>%
+  bind_rows(.id = "simulation_loop") %>%
+  group_by(coexistence_partition, species) %>%
+  summarise(mean_cs = mean(coexistence_strength),
+            sd_cs = sd(coexistence_strength),
+            n_cs = n()) %>%
+  mutate(se_cs = sd_cs/sqrt(n_cs),
+         larval_supply = "low") -> simulation_loop_output_low_df
+
+simulation_loop_output_med %>%
+  map(gather, delta_0:delta_cp, key = "coexistence_partition", value = "coexistence_strength") %>%
+  map(mutate, coexistence_partition = factor(coexistence_partition, levels = c("r_bar", 
+                                                                               "delta_0", "delta_c", 
+                                                                               "delta_p", "delta_cp"))) %>%
+  bind_rows(.id = "simulation_loop") %>%
+  group_by(coexistence_partition, species) %>%
+  summarise(mean_cs = mean(coexistence_strength),
+            sd_cs = sd(coexistence_strength),
+            n_cs = n()) %>%
+  mutate(se_cs = sd_cs/sqrt(n_cs),
+         larval_supply = "med") -> simulation_loop_output_med_df
+
+simulation_loop_output_high[1:9] %>%
+  map(gather, delta_0:delta_cp, key = "coexistence_partition", value = "coexistence_strength") %>%
+  map(mutate, coexistence_partition = factor(coexistence_partition, levels = c("r_bar", 
+                                                                               "delta_0", "delta_c", 
+                                                                               "delta_p", "delta_cp"))) %>%
+  bind_rows(.id = "simulation_loop") %>%
+  group_by(coexistence_partition, species) %>%
+  summarise(mean_cs = mean(coexistence_strength),
+            sd_cs = sd(coexistence_strength),
+            n_cs = n()) %>%
+  mutate(se_cs = sd_cs/sqrt(n_cs),
+         larval_supply = "high") -> simulation_loop_output_high_df
+
+bind_rows(simulation_loop_output_low_df,
+          simulation_loop_output_med_df,
+          simulation_loop_output_high_df) %>%
+  mutate(larval_supply = factor(larval_supply, levels = c("low", "med", "high"))) %>%
+  ggplot(aes(x = coexistence_partition, y = mean_cs, color = coexistence_partition)) +
+  geom_bar(stat = "identity", aes(fill = coexistence_partition)) + 
+  geom_errorbar(aes(ymin = mean_cs - se_cs, ymax = mean_cs + se_cs), color = "black", width = 0.2) +
+  facet_grid(larval_supply ~ species, scales = "free") +
+  geom_hline(yintercept = 0) +
+  theme(legend.position = "none") + 
+  labs(x = "", y = "")
 

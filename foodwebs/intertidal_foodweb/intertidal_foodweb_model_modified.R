@@ -156,7 +156,7 @@ do.intertidal.simulation <- function(
   
   settlement.B = .002 * 30 * 24,
   settlement.C = .002 * 30 * 24,
-  settlement.L = .0002 * 30 * 24,
+  settlement.L = .002 * 30 * 24,
   
   # all means set to "high" recruitment scenarios 
   # (from forde & doak table 1)
