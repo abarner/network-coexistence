@@ -454,7 +454,7 @@ fd_results_larval_test %>%
 
 # so want to run these 3 scenarios - to do so, need to use a modified predation scenario
 
-simulation_loop_output_high <- vector(mode = "list", length = 10)
+simulation_loop_output_high <- vector(mode = "list", length = 100)
 for (i in 1:length(simulation_loop_output_high)) {
 
   print(i)
@@ -529,7 +529,7 @@ for (i in 1:length(simulation_loop_output_high)) {
     mutate(delta_cp = r_bar - (delta_0 + delta_c + delta_p)) -> simulation_loop_output_high[[i]]
 }
 
-simulation_loop_output_med <- vector(mode = "list", length = 10)
+simulation_loop_output_med <- vector(mode = "list", length = 100)
 for (i in 1:length(simulation_loop_output_med)) {
   
   print(i)
@@ -604,7 +604,7 @@ for (i in 1:length(simulation_loop_output_med)) {
     mutate(delta_cp = r_bar - (delta_0 + delta_c + delta_p)) -> simulation_loop_output_med[[i]]
 }
 
-simulation_loop_output_low <- vector(mode = "list", length = 10)
+simulation_loop_output_low <- vector(mode = "list", length = 100)
 for (i in 1:length(simulation_loop_output_low)) {
   
   print(i)
@@ -679,8 +679,32 @@ for (i in 1:length(simulation_loop_output_low)) {
     mutate(delta_cp = r_bar - (delta_0 + delta_c + delta_p)) -> simulation_loop_output_low[[i]]
 }
 
-# process results
+# write out files
+simulation_loop_output_low %>%
+  map(gather, delta_0:delta_cp, key = "coexistence_partition", value = "coexistence_strength") %>%
+  map(mutate, coexistence_partition = factor(coexistence_partition, levels = c("r_bar", 
+                                                                               "delta_0", "delta_c", 
+                                                                               "delta_p", "delta_cp"))) %>%
+  bind_rows(.id = "simulation_loop") %>%
+  write_csv("intertidal_simulation_fulloutput_larvae_low.csv")
+simulation_loop_output_med %>%
+  map(gather, delta_0:delta_cp, key = "coexistence_partition", value = "coexistence_strength") %>%
+  map(mutate, coexistence_partition = factor(coexistence_partition, levels = c("r_bar", 
+                                                                               "delta_0", "delta_c", 
+                                                                               "delta_p", "delta_cp"))) %>%
+  bind_rows(.id = "simulation_loop") %>%
+  write_csv("intertidal_simulation_fulloutput_larvae_med.csv")
 
+simulation_loop_output_high %>%
+  map(gather, delta_0:delta_cp, key = "coexistence_partition", value = "coexistence_strength") %>%
+  map(mutate, coexistence_partition = factor(coexistence_partition, levels = c("r_bar", 
+                                                                               "delta_0", "delta_c", 
+                                                                               "delta_p", "delta_cp"))) %>%
+  bind_rows(.id = "simulation_loop") %>%
+  write_csv("intertidal_simulation_fulloutput_larvae_high.csv")
+
+
+# process results
 simulation_loop_output_low %>%
   map(gather, delta_0:delta_cp, key = "coexistence_partition", value = "coexistence_strength") %>%
   map(mutate, coexistence_partition = factor(coexistence_partition, levels = c("r_bar", 
