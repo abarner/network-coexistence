@@ -38,12 +38,12 @@ sdC2_results_sigma1 <- c(sdC2_r_bar, sdC2_delta_0, sdC2_delta_P, sdC2_delta_E, s
 
 # ----------------------------------------------------------------------------------------------------
 # Plot results
-#quartz(width=4.5, height=6)
+quartz(width=4.5, height=7)
 pdf(file=here("foodwebs", "cr_variation_examplecode_files", 
-              "MSI_results", "sigma_variation_results.pdf"), width=4.5, height=7)
+              "MSI_results", "sigma_variation_results2.pdf"), width=4.5, height=7)
 par(mfrow=c(3,2), oma=c(4,2, 1.5, 1), mar=c(.5,2,.5,0))
 x <- barplot(C1_results_sigma1, ylim=c(-.1, .17), xlab="", ylab=c("Growth Rate When Rare"),
-             col=c("grey40", "grey70", "grey70", "grey70", "grey70"), yaxt="n")
+             col=c("#000000", "#0072B2", "#56B4E9", "#CC79A7", "#E69F00"), yaxt="n")
 abline(h=0)
 axis(side=2, at=c(-.1, 0, .1), labels=TRUE, tick=TRUE)
 #axis(side=1, at=c(.7, 1.9, 3.1, 4.3, 5.5), lab=c("a" = expression(bar("r")[i]-bar("r")[r]) ,
@@ -61,7 +61,7 @@ arrows(x0=c(.7, 1.9, 3.1, 4.3, 5.5), y0=C1_results_sigma1-sdC1_results_sigma1,
        angle=90, col=c("black"), code=3)
 
 barplot(C2_results_sigma1, ylim=c(-.1, .17), xlab="", ylab=c(""),
-        col=c("grey40", "grey70", "grey70", "grey70", "grey70"), yaxt="n")
+        col=c("#000000", "#0072B2", "#56B4E9", "#CC79A7", "#E69F00"), yaxt="n")
 abline(h=0)
 #axis(side=1, at=c(.7, 1.9, 3.1, 4.3, 5.5), lab=c("a" = expression(bar("r")[i]-bar("r")[r]) ,
 #                                                 "b" = expression(bar(Delta)[i]^0),
@@ -120,7 +120,7 @@ sdC2_results_sigma4 <- c(sdC2_r_bar, sdC2_delta_0, sdC2_delta_P, sdC2_delta_E, s
 #quartz(width=6, height=4)
 #par(mfrow=c(1,2), oma=c(4,2, 1.5, 1), mar=c(0,2,0,0))
 x <- barplot(C1_results_sigma4, ylim=c(-.1, .17), xlab="", ylab=c("Growth Rate When Rare"),
-             col=c("grey40", "grey70", "grey70", "grey70", "grey70"), yaxt="n")
+             col=c("#000000", "#0072B2", "#56B4E9", "#CC79A7", "#E69F00"), yaxt="n")
 abline(h=0)
 #axis(side=1, at=c(.7, 1.9, 3.1, 4.3, 5.5), lab=c("a" = expression(bar("r")[i]-bar("r")[r]) ,
 #                                                 "b" = expression(bar(Delta)[i]^0),
@@ -137,7 +137,7 @@ arrows(x0=c(.7, 1.9, 3.1, 4.3, 5.5), y0=C1_results_sigma4-sdC1_results_sigma4,
        angle=90, col=c("black"), code=3)
 
 barplot(C2_results_sigma4, ylim=c(-.1, .17), xlab="", ylab=c(""),
-        col=c("grey40", "grey70", "grey70", "grey70", "grey70"), yaxt="n")
+        col=c("#000000", "#0072B2", "#56B4E9", "#CC79A7", "#E69F00"), yaxt="n")
 abline(h=0)
 #axis(side=1, at=c(.7, 1.9, 3.1, 4.3, 5.5), lab=c("a" = expression(bar("r")[i]-bar("r")[r]) ,
 #                                                 "b" = expression(bar(Delta)[i]^0),
@@ -196,7 +196,7 @@ sdC2_results_sigma7 <- c(sdC2_r_bar, sdC2_delta_0, sdC2_delta_P, sdC2_delta_E, s
 #quartz(width=6, height=4)
 #par(mfrow=c(1,2), oma=c(4,2, 1.5, 1), mar=c(0,2,0,0))
 x <- barplot(C1_results_sigma7, ylim=c(-.1, .17), xlab="", ylab=c("Growth Rate When Rare"),
-             col=c("grey40", "grey70", "grey70", "grey70", "grey70"), yaxt="n")
+             col=c("#000000", "#0072B2", "#56B4E9", "#CC79A7", "#E69F00"), yaxt="n")
 abline(h=0)
 axis(side=2, at=c(-.1, 0., .1), labels=TRUE, tick=TRUE)
 axis(side=1, at=c(.7, 1.9, 3.1, 4.3, 5.5), lab=c("a" = expression(bar("r")[i]-bar("r")[r]) ,
@@ -214,7 +214,7 @@ arrows(x0=c(.7, 1.9, 3.1, 4.3, 5.5), y0=C1_results_sigma7-sdC1_results_sigma7,
        angle=90, col=c("black"), code=3)
 
 barplot(C2_results_sigma7, ylim=c(-.1, .17), xlab="", ylab=c(""),
-        col=c("grey40", "grey70", "grey70", "grey70", "grey70"), yaxt="n")
+        col=c("#000000", "#0072B2", "#56B4E9", "#CC79A7", "#E69F00"), yaxt="n")
 abline(h=0)
 axis(side=1, at=c(.7, 1.9, 3.1, 4.3, 5.5), lab=c("a" = expression(bar("r")[i]-bar("r")[r]) ,
                                                  "b" = expression(bar(Delta)[i]^0),
