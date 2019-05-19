@@ -82,3 +82,10 @@ text(x=.3, y=.16, "B)")
 mtext("Mechanistic Partitioning", side=1, outer=TRUE, adj=0.5, line=2.25)
 mtext("Growth Rate When Rare", side=2, outer=TRUE, adj=0.5, line=.5)
 mtext(expression("Competitor 2"), side=3, outer=FALSE, adj=0.5)
+
+quartz(5,5)
+plot.new()
+legend("topleft", c("Low-density growth rate", "Growth rate under avg. conditions", 
+                    "Effect of variation in predation rates", "Effect of environmental fluctuations", 
+                    "Interactive effect of varying predation \n and environmental fluctuations"), lwd=4,
+       col=c("#000000", "#0072B2", "#56B4E9", "#CC79A7", "#E69F00"), bty="n", cex=.75)
