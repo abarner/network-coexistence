@@ -454,7 +454,7 @@ fd_results_larval_test %>%
 
 # so want to run these 3 scenarios - to do so, need to use a modified predation scenario
 
-simulation_loop_output_high <- vector(mode = "list", length = 100)
+simulation_loop_output_high <- vector(mode = "list", length = 20)
 for (i in 1:length(simulation_loop_output_high)) {
 
   print(i)
@@ -687,6 +687,7 @@ simulation_loop_output_low %>%
                                                                                "delta_p", "delta_cp"))) %>%
   bind_rows(.id = "simulation_loop") %>%
   write_csv("intertidal_simulation_fulloutput_larvae_low.csv")
+
 simulation_loop_output_med %>%
   map(gather, delta_0:delta_cp, key = "coexistence_partition", value = "coexistence_strength") %>%
   map(mutate, coexistence_partition = factor(coexistence_partition, levels = c("r_bar", 
@@ -744,6 +745,7 @@ simulation_loop_output_high[1:9] %>%
   mutate(se_cs = sd_cs/sqrt(n_cs),
          larval_supply = "high") -> simulation_loop_output_high_df
 
+png(filename = "intertidal_simulation_test_run.png", width = 8, height = 6, units = "in", res = 300)
 bind_rows(simulation_loop_output_low_df,
           simulation_loop_output_med_df,
           simulation_loop_output_high_df) %>%
