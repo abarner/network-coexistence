@@ -1,12 +1,13 @@
 # Create graph of mechanistic decomposition
 #source("LGS_Vasseur_model.R") # if wanting to run a full set of simulations
+library(here)
 
 # or if wanting to read them in
 C1_final_mechanisms <- read.csv(file = here("foodwebs", "cr_variation_examplecode_files", 
-                                           "mechanism_figs", "C1_final_mechanisms.csv"))
+                                           "mechanism_figs", "C1_final_mechanisms_positive_cross.csv"))
 
 C2_final_mechanisms <- read.csv(file = here("foodwebs", "cr_variation_examplecode_files", 
-                                            "mechanism_figs", "C2_final_mechanisms.csv"))
+                                            "mechanism_figs", "C2_final_mechanisms_positive_cross.csv"))
 
 C1_r_bar <- mean(C1_final_mechanisms[,1])
 C1_delta_0 <- mean(C1_final_mechanisms[,2])
@@ -41,10 +42,13 @@ sdC2_results <- c(sdC2_r_bar, sdC2_delta_0, sdC2_delta_P, sdC2_delta_E, sdC2_del
 
 # ----------------------------------------------------------------------------------------------------
 # Plot results
+cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
 quartz(width=6, height=4)
 par(mfrow=c(1,2), oma=c(4,2, 1.5, 1), mar=c(0,2,0,0))
 x <- barplot(C1_results, ylim=c(-.06, .17), xlab="", ylab=c("Growth Rate When Rare"),
-             col=c("grey40", "grey70", "grey70", "grey70", "grey70"))
+             col=c("#000000", "#0072B2", "#56B4E9", "#CC79A7", "#E69F00"))
+
 abline(h=0)
 axis(side=1, at=c(.7, 1.9, 3.1, 4.3, 5.5), lab=c("a" = expression(bar("r")[i]-bar("r")[r]) ,
                                                  "b" = expression(bar(Delta)[i]^0),
@@ -61,7 +65,7 @@ arrows(x0=c(.7, 1.9, 3.1, 4.3, 5.5), y0=C1_results-sdC1_results,
        angle=90, col=c("black"), code=3)
 
 barplot(C2_results, ylim=c(-.06, .17), xlab="", ylab=c(""),
-        col=c("grey40", "grey70", "grey70", "grey70", "grey70"), yaxt="n")
+        col=c("#000000", "#0072B2", "#56B4E9", "#CC79A7", "#E69F00"), yaxt="n")
 abline(h=0)
 axis(side=1, at=c(.7, 1.9, 3.1, 4.3, 5.5), lab=c("a" = expression(bar("r")[i]-bar("r")[r]) ,
                                                  "b" = expression(bar(Delta)[i]^0),
@@ -78,3 +82,10 @@ text(x=.3, y=.16, "B)")
 mtext("Mechanistic Partitioning", side=1, outer=TRUE, adj=0.5, line=2.25)
 mtext("Growth Rate When Rare", side=2, outer=TRUE, adj=0.5, line=.5)
 mtext(expression("Competitor 2"), side=3, outer=FALSE, adj=0.5)
+
+quartz(5,5)
+plot.new()
+legend("topleft", c("Low-density growth rate", "Growth rate under avg. conditions", 
+                    "Effect of variation in predation rates", "Effect of environmental fluctuations", 
+                    "Interactive effect of varying predation \n and environmental fluctuations"), lwd=4,
+       col=c("#000000", "#0072B2", "#56B4E9", "#CC79A7", "#E69F00"), bty="n", cex=.75)
