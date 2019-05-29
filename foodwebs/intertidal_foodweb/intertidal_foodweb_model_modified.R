@@ -196,7 +196,7 @@ do.intertidal.simulation <- function(
   size.recruit.C <- .000003
   size.recruit.L <- .000003
   
-  survival.B <- .8 # asymmetry based on connell 1961
+  survival.B <- .75 # asymmetry based on connell 1961
   survival.C <- .7
   survival.L <- .97
   survival.W <- .94
@@ -212,7 +212,7 @@ do.intertidal.simulation <- function(
   # vs Figures from Menge et al. 2011 JEMBE (50-100 recruits / 100 cm2)
   # so should be about ~ an order of magnitude lower than barnacle settlement?
   
-  survival.recruit.B <- .8 # asymmetry based on connell 1961
+  survival.recruit.B <- .75 # asymmetry based on connell 1961
   survival.recruit.C <- .7
   survival.recruit.L <- .88
   survival.recruit.W <- .88

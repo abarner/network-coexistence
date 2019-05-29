@@ -403,14 +403,26 @@ larval_scenarios_for_full_run <- tribble (
   1, "C", "high",
   1, "L", "high",
   1, "P", "high",
-  2, "B", "med",
-  2, "C", "med",
-  2, "L", "med",
-  2, "P", "med",
-  3, "B", "low",
+  2, "B", "low",
+  2, "C", "low",
+  2, "L", "low",
+  2, "P", "low",
+  3, "B", "high",
   3, "C", "low",
   3, "L", "low",
-  3, "P", "low"
+  3, "P", "low",
+  4, "B", "low",
+  4, "C", "high",
+  4, "L", "low",
+  4, "P", "low",
+  5, "B", "low",
+  5, "C", "low",
+  5, "L", "high",
+  5, "P", "low",
+  6, "B", "low",
+  6, "C", "low",
+  6, "L", "low",
+  6, "P", "high"
 )
 
 larval_scenarios_for_full_run %>%
@@ -424,10 +436,10 @@ larval_scenarios_for_full_run %>%
   spread(temp, value) -> larval_scenarios_input
 
 
-fd_results_larval_test <- vector(mode = "list", length = 3)
-names(fd_results_larval_test) <- c("high", "med", "low")
+fd_results_larval_test <- vector(mode = "list", length = 6)
+names(fd_results_larval_test) <- c("high", "low", "bg_high", "cd_high", "limpets_high", "pisaster_high")
 
-for (i in 1:3) {
+for (i in 1:6) {
   fd_results_larval_test[[i]] <- do.intertidal.simulation(
     B.mean = larval_scenarios_input$B_mean_recruit[i],
     B.stdev = larval_scenarios_input$B_variance_recruit[i],
@@ -442,7 +454,6 @@ for (i in 1:3) {
 
 fd_results_larval_test %>%
   bind_rows(.id = "scenario") %>%
-  mutate(scenario = factor(scenario, levels = c("low", "med", "high"))) %>%
   gather(balanus_glandula:free_space, key = "species",
          value = "abundance") %>%
   ggplot(aes(x = time, y = abundance, color = scenario)) +
@@ -450,9 +461,10 @@ fd_results_larval_test %>%
   geom_line() +
   facet_wrap(~species, scales = "free")
 
-# looks good - everything generally ranks low-mid-high (except whelks)
-
 # so want to run these 3 scenarios - to do so, need to use a modified predation scenario
+
+
+
 
 simulation_loop_output_high <- vector(mode = "list", length = 20)
 for (i in 1:length(simulation_loop_output_high)) {
@@ -758,3 +770,73 @@ bind_rows(simulation_loop_output_low_df,
   theme(legend.position = "none") + 
   labs(x = "", y = "")
 
+
+#### Take 2: Run coexistence scenarios multiple times + loop over multiple supply rates ####
+
+
+
+
+## going to run 3 scenarios, all with "mid" variance: all low, all mid, all high
+larval_scenarios_for_full_run <- tribble (
+  ~scenario, ~species, ~supply_level,
+  1, "B", "high",
+  1, "C", "high",
+  1, "L", "high",
+  1, "P", "high",
+  2, "B", "low",
+  2, "C", "low",
+  2, "L", "low",
+  2, "P", "low",
+  3, "B", "high",
+  3, "C", "low",
+  3, "L", "low",
+  3, "P", "low",
+  4, "B", "low",
+  4, "C", "high",
+  4, "L", "low",
+  4, "P", "low",
+  5, "B", "low",
+  5, "C", "low",
+  5, "L", "high",
+  5, "P", "low",
+  6, "B", "low",
+  6, "C", "low",
+  6, "L", "low",
+  6, "P", "high"
+)
+
+larval_scenarios_for_full_run %>%
+  left_join(larval_supply) %>%
+  select(-supply_level, -variance_recruit) %>%
+  mutate(supply_level = "med") %>%
+  left_join(select(larval_supply, -mean_recruit)) %>%
+  select(-supply_level) %>%
+  gather(key = variable, value = value, mean_recruit, variance_recruit) %>%
+  unite(temp, species, variable) %>%
+  spread(temp, value) -> larval_scenarios_input
+
+
+fd_results_larval_test <- vector(mode = "list", length = 6)
+names(fd_results_larval_test) <- c("high", "low", "bg_high", "cd_high", "limpets_high", "pisaster_high")
+
+for (i in 1:6) {
+  fd_results_larval_test[[i]] <- do.intertidal.simulation(
+    B.mean = larval_scenarios_input$B_mean_recruit[i],
+    B.stdev = larval_scenarios_input$B_variance_recruit[i],
+    C.mean = larval_scenarios_input$C_mean_recruit[i],
+    C.stdev = larval_scenarios_input$C_variance_recruit[i],
+    L.mean = larval_scenarios_input$L_mean_recruit[i],
+    L.stdev = larval_scenarios_input$L_variance_recruit[i],
+    P.mean = larval_scenarios_input$P_mean_recruit[i],
+    P.stdev = larval_scenarios_input$P_variance_recruit[i]
+  )
+}
+
+fd_results_larval_test %>%
+  bind_rows(.id = "scenario") %>%
+  gather(balanus_glandula:free_space, key = "species",
+         value = "abundance") %>%
+  ggplot(aes(x = time, y = abundance, color = scenario)) +
+  geom_point(size = 2, alpha = 0.7) +
+  geom_line() +
+  facet_wrap(~species, scales = "free")

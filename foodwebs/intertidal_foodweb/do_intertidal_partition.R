@@ -715,7 +715,109 @@ do.intertidal.predator.removal.with.larval.var <- function(var_P_input, var_B_in
 
 
 
+#### function to run simulations across larval supply rates ####
 
+
+do.larval.supply.simulation <- function(k = 1, # indexing number for which larval scenario to use
+                                        n_sim = 50) {
+  
+  simulation_loop_output_tmp <- vector(mode = "list", length = n_sim)
+  
+  for (i in 1:length(simulation_loop_output_tmp)) {
+    
+    print(i)
+    
+    B.mean_input <- larval_scenarios_input$B_mean_recruit[k]
+    B.stdev_input <- larval_scenarios_input$B_variance_recruit[k]
+    C.mean_input <- larval_scenarios_input$C_mean_recruit[k]
+    C.stdev_input <- larval_scenarios_input$C_variance_recruit[k]
+    L.mean_input <- larval_scenarios_input$L_mean_recruit[k]
+    L.stdev_input <- larval_scenarios_input$L_variance_recruit[k]
+    P.mean_input <- larval_scenarios_input$P_mean_recruit[k]
+    P.stdev_input <- larval_scenarios_input$P_variance_recruit[k]
+    
+    # run model to equilibrium, get low density growth rates for invader/resident combinations
+    fd_tmp_1 <- do.intertidal.rbar.with.larval.var(B.mean = B.mean_input, B.stdev = B.stdev_input, 
+                                                   C.mean = C.mean_input, C.stdev = C.stdev_input,
+                                                   L.mean = L.mean_input, L.stdev = L.stdev_input, 
+                                                   P.mean = P.mean_input, P.stdev = P.stdev_input)
+    
+    # get long term averages:
+    fd_tmp_1_var_C <- mean(fd_tmp_1$results_1$larvae.C)
+    fd_tmp_1_var_B <- mean(fd_tmp_1$results_1$larvae.B)
+    fd_tmp_1_var_L <- mean(fd_tmp_1$results_1$larvae.L)
+    fd_tmp_1_var_P <- mean(fd_tmp_1$results_1$larvae.P)
+    fd_tmp_1_P_avg <- mean(fd_tmp_1$results_1$pisaster_ochraceus)
+    fd_tmp_1_W_avg <- mean(fd_tmp_1$results_1$whelks)
+    
+    # run model to equilibrium and get long term and low density growth rates
+    fd_tmp_3a <- do.intertidal.predator.removal.with.larval.var(var_B_input = fd_tmp_1_var_B, 
+                                                                var_C_input = fd_tmp_1_var_C, 
+                                                                var_L_input = fd_tmp_1_var_L,
+                                                                var_P_input = fd_tmp_1_var_P,
+                                                                P_avg_input = fd_tmp_1_P_avg,
+                                                                W_avg_input = fd_tmp_1_W_avg,
+                                                                B.mean = B.mean_input, B.stdev = B.stdev_input, 
+                                                                C.mean = C.mean_input, C.stdev = C.stdev_input,
+                                                                L.mean = L.mean_input, L.stdev = L.stdev_input, 
+                                                                P.mean = P.mean_input, P.stdev = P.stdev_input)
+    
+    # set variation in competitor recruitment to average (constant)
+    fd_tmp_3b <- do.intertidal.predator.removal.with.larval.var(var_B_input = fd_tmp_1_var_B, 
+                                                                var_C_input = fd_tmp_1_var_C, 
+                                                                var_L_input = fd_tmp_1_var_L,
+                                                                var_P_input = NULL,
+                                                                P_avg_input = NULL,
+                                                                W_avg_input = NULL,
+                                                                B.mean = B.mean_input, B.stdev = B.stdev_input, 
+                                                                C.mean = C.mean_input, C.stdev = C.stdev_input,
+                                                                L.mean = L.mean_input, L.stdev = L.stdev_input, 
+                                                                P.mean = P.mean_input, P.stdev = P.stdev_input)
+    
+    # set variation in predator ABUNDANCE to average (constant)
+    fd_tmp_3c <- do.intertidal.predator.removal.with.larval.var(var_B_input = NULL, 
+                                                                var_C_input = NULL, 
+                                                                var_L_input = NULL,
+                                                                var_P_input = fd_tmp_1_var_P,
+                                                                P_avg_input = fd_tmp_1_P_avg,
+                                                                W_avg_input = fd_tmp_1_W_avg,
+                                                                B.mean = B.mean_input, B.stdev = B.stdev_input, 
+                                                                C.mean = C.mean_input, C.stdev = C.stdev_input,
+                                                                L.mean = L.mean_input, L.stdev = L.stdev_input, 
+                                                                P.mean = P.mean_input, P.stdev = P.stdev_input)
+    
+    list(r_bar = fd_tmp_1$r_bar_result,
+         delta_0 = fd_tmp_3a$r_bar_result,
+         delta_p = fd_tmp_3b$r_bar_result,
+         delta_c = fd_tmp_3c$r_bar_result) %>%
+      bind_rows(.id = "id") -> fd_tmp_3_df
+    
+    fd_tmp_3_df  %>%
+      spread(key = "id", value = r_bar) %>%
+      mutate(delta_cp = r_bar - (delta_0 + delta_c + delta_p)) -> simulation_loop_output_tmp[[i]]
+  }
+  
+  # check if any are null
+  for(j in 1:length(simulation_loop_output_tmp)) {
+    if (is.null(simulation_loop_output_tmp[[i]])) {
+      simulation_loop_output_tmp[[i]] <- tibble(species = c("balanus_glandula", "chthamalus_dalli", "limpets"),
+                                                delta_0 = rep(NA, 3),
+                                                delta_c = rep(NA, 3),
+                                                delta_p = rep(NA, 3),
+                                                r_bar = rep(NA, 3),
+                                                delta_cp = rep(NA, 3))
+    }
+  }
+  
+  simulation_loop_output_tmp %>%
+    map(gather, delta_0:delta_cp, key = "coexistence_partition", value = "coexistence_strength") %>%
+    map(mutate, coexistence_partition = factor(coexistence_partition, levels = c("r_bar", 
+                                                                                 "delta_0", "delta_c", 
+                                                                                 "delta_p", "delta_cp"))) %>%
+    bind_rows(.id = "simulation_loop") %>%
+    return()
+  
+}
 
 
 
