@@ -773,10 +773,6 @@ bind_rows(simulation_loop_output_low_df,
 
 #### Take 2: Run coexistence scenarios multiple times + loop over multiple supply rates ####
 
-
-
-
-## going to run 3 scenarios, all with "mid" variance: all low, all mid, all high
 larval_scenarios_for_full_run <- tribble (
   ~scenario, ~species, ~supply_level,
   1, "B", "high",
@@ -840,3 +836,49 @@ fd_results_larval_test %>%
   geom_point(size = 2, alpha = 0.7) +
   geom_line() +
   facet_wrap(~species, scales = "free")
+
+
+## run scenarios
+
+test <- do.larval.supply.simulation(k = 1, n_sim = 10)
+# looks good
+
+# run a shorter test scenario to see how it all looks
+
+test_list <- vector(mode = "list", length = 6)
+names(test_list) <- c("high", "low", "bg_high", "cd_high", "limpets_high", "pisaster_high")
+
+# note - loop may fail but seems to be due to a time out somehow
+for (l in 1:6) {
+  print(c("LOOP = ", l))
+  test_list[[l]] <- do.larval.supply.simulation(k = l, n_sim = 10)
+}
+
+# does any scenario result in + limpet coexistence?
+test_list %>%
+  bind_rows(.id = "larval_scenario") %>%
+  group_by(larval_scenario, coexistence_partition, species) %>%
+  summarise(mean_cs = mean(coexistence_strength),
+            sd_cs = sd(coexistence_strength),
+            n_cs = n()) %>%
+  mutate(se_cs = sd_cs/sqrt(n_cs)) %>%
+  filter(species == "limpets" & coexistence_partition == "r_bar")
+# YES! when CD has high recruitment
+
+test_list %>%
+  bind_rows(.id = "larval_scenario") %>%
+  group_by(larval_scenario, coexistence_partition, species) %>%
+  summarise(mean_cs = mean(coexistence_strength),
+            sd_cs = sd(coexistence_strength),
+            n_cs = n()) %>%
+  mutate(se_cs = sd_cs/sqrt(n_cs)) %>%
+  ggplot(aes(x = coexistence_partition, y = mean_cs, color = coexistence_partition)) +
+  geom_bar(stat = "identity", aes(fill = coexistence_partition)) + 
+  geom_errorbar(aes(ymin = mean_cs - se_cs, ymax = mean_cs + se_cs), color = "black", width = 0.2) +
+  facet_grid(larval_scenario ~ species, scales = "free") +
+  geom_hline(yintercept = 0) +
+  theme(legend.position = "none") + 
+  labs(x = "", y = "")
+
+
+
