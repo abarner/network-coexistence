@@ -1015,9 +1015,8 @@ for (l in 1:3) {
   print(c("LOOP = ", l))
   test_var_list[[l]] <- do.larval.supply.simulation(k = l, n_sim = 3)
 }
-#### pick up here ####
 
-test_list %>%
+test_var_list %>%
   bind_rows(.id = "larval_scenario") %>%
   group_by(larval_scenario, coexistence_partition, species) %>%
   summarise(mean_cs = mean(coexistence_strength),
@@ -1031,8 +1030,8 @@ test_list %>%
   facet_grid(species ~ larval_scenario, scales = "free") +
   geom_hline(yintercept = 0) +
   theme(legend.position = "none") + 
-  scale_x_discrete(labels=xlab) + 
   xlab("Mechanistic partitioning") +
   ylab("Growth rate when rare")
 
+## does NOT improve coexistence for limpets
 
