@@ -1,21 +1,21 @@
 
 #### function to run the first step of coexistence partitioning ####
 
-do.intertidal.rbar <- function() {
+do.intertidal.rbar <- function(years_set = 500) {
   
   # 1. run to eqilibrium
   
-  fd_results_1 <- do.intertidal.simulation(years_set = 500)
+  fd_results_1 <- do.intertidal.simulation(years_set = years_set)
   
   # 2. low density growth rate calculation
   
   # balanus
   # run without balanus adults or recruits -> equilibrium
-  fd_results_ldr_b_absent <- do.intertidal.simulation(years_set = 500, B_1 = 0)
+  fd_results_ldr_b_absent <- do.intertidal.simulation(years_set = years_set, B_1 = 0)
   # set adult balanus population size very small (~1/1000 of usual size) and run using 
   # densities from last time step
   fd_results_ldr_b_invade <- 
-    do.intertidal.simulation(years_set = 500, 
+    do.intertidal.simulation(years_set = years_set, 
                              B_1 = 1,
                              C_1 = fd_results_ldr_b_absent$chthamalus_dalli[nrow(fd_results_ldr_b_absent)],
                              L_1 = fd_results_ldr_b_absent$limpets[nrow(fd_results_ldr_b_absent)],
@@ -28,9 +28,9 @@ do.intertidal.rbar <- function() {
   
   
   # chthamalus
-  fd_results_ldr_c_absent <- do.intertidal.simulation(years_set = 500, C_1 = 0)
+  fd_results_ldr_c_absent <- do.intertidal.simulation(years_set = years_set, C_1 = 0)
   fd_results_ldr_c_invade <- 
-    do.intertidal.simulation(years_set = 500, 
+    do.intertidal.simulation(years_set = years_set, 
                              B_1 = fd_results_ldr_c_absent$balanus_glandula[nrow(fd_results_ldr_c_absent)],
                              C_1 = 1,
                              L_1 = fd_results_ldr_c_absent$limpets[nrow(fd_results_ldr_c_absent)],
@@ -43,9 +43,9 @@ do.intertidal.rbar <- function() {
   
   
   # limpets
-  fd_results_ldr_l_absent <- do.intertidal.simulation(years_set = 500, L_1 = 0)
+  fd_results_ldr_l_absent <- do.intertidal.simulation(years_set = years_set, L_1 = 0)
   fd_results_ldr_l_invade <- 
-    do.intertidal.simulation(years_set = 500, 
+    do.intertidal.simulation(years_set = years_set, 
                              B_1 = fd_results_ldr_l_absent$balanus_glandula[nrow(fd_results_ldr_l_absent)],
                              C_1 = fd_results_ldr_l_absent$chthamalus_dalli[nrow(fd_results_ldr_l_absent)],
                              L_1 = 1,
@@ -58,9 +58,9 @@ do.intertidal.rbar <- function() {
   
   
   # whelks
-  fd_results_ldr_w_absent <- do.intertidal.simulation(years_set = 500, W_1 = 0)
+  fd_results_ldr_w_absent <- do.intertidal.simulation(years_set = years_set, W_1 = 0)
   fd_results_ldr_w_invade <- 
-    do.intertidal.simulation(years_set = 500, 
+    do.intertidal.simulation(years_set = years_set, 
                              B_1 = fd_results_ldr_w_absent$balanus_glandula[nrow(fd_results_ldr_w_absent)],
                              C_1 = fd_results_ldr_w_absent$chthamalus_dalli[nrow(fd_results_ldr_w_absent)],
                              L_1 = fd_results_ldr_w_absent$limpets[nrow(fd_results_ldr_w_absent)],
@@ -73,9 +73,9 @@ do.intertidal.rbar <- function() {
   
   
   # sea stars (pisaster)
-  fd_results_ldr_p_absent <- do.intertidal.simulation(years_set = 500, P_1 = 0)
+  fd_results_ldr_p_absent <- do.intertidal.simulation(years_set = years_set, P_1 = 0)
   fd_results_ldr_p_invade <- 
-    do.intertidal.simulation(years_set = 500, 
+    do.intertidal.simulation(years_set = years_set, 
                              B_1 = fd_results_ldr_p_absent$balanus_glandula[nrow(fd_results_ldr_p_absent)],
                              C_1 = fd_results_ldr_p_absent$chthamalus_dalli[nrow(fd_results_ldr_p_absent)],
                              L_1 = fd_results_ldr_p_absent$limpets[nrow(fd_results_ldr_p_absent)],
@@ -244,19 +244,19 @@ do.intertidal.all.average <- function(var_P_input, var_B_input, var_C_input, var
 #### function to run coexistence partitioning on +/- variation in predator abundance overall ####
 
 do.intertidal.predator.removal <- function(var_P_input, var_B_input, var_C_input, var_L_input,
-                                           P_avg_input, W_avg_input) {
+                                           P_avg_input, W_avg_input, years_set = 250) {
   
   # low density growth rate calculation
   
   # balanus
   # run without balanus adults or recruits -> equilibrium
-  fd_results_ldr_b_absent <- do.intertidal.simulation(years_set = 250, B_1 = 0,
+  fd_results_ldr_b_absent <- do.intertidal.simulation(years_set = years_set, B_1 = 0,
                                                       var_P = var_P_input, var_B = var_B_input, var_C = var_C_input, var_L = var_L_input,
                                                       P_avg = P_avg_input, W_avg = W_avg_input)
   # set adult balanus population size very small (~1/1000 of usual size) and run using 
   # densities from last time step
   fd_results_ldr_b_invade <- 
-    do.intertidal.simulation(years_set = 250, 
+    do.intertidal.simulation(years_set = years_set, 
                              B_1 = 1,
                              C_1 = fd_results_ldr_b_absent$chthamalus_dalli[nrow(fd_results_ldr_b_absent)],
                              L_1 = fd_results_ldr_b_absent$limpets[nrow(fd_results_ldr_b_absent)],
@@ -271,11 +271,11 @@ do.intertidal.predator.removal <- function(var_P_input, var_B_input, var_C_input
   
   
   # chthamalus
-  fd_results_ldr_c_absent <- do.intertidal.simulation(years_set = 250, C_1 = 0,
+  fd_results_ldr_c_absent <- do.intertidal.simulation(years_set = years_set, C_1 = 0,
                                                       var_P = var_P_input, var_B = var_B_input, var_C = var_C_input, var_L = var_L_input,
                                                       P_avg = P_avg_input, W_avg = W_avg_input)
   fd_results_ldr_c_invade <- 
-    do.intertidal.simulation(years_set = 250, 
+    do.intertidal.simulation(years_set = years_set, 
                              B_1 = fd_results_ldr_c_absent$balanus_glandula[nrow(fd_results_ldr_c_absent)],
                              C_1 = 1,
                              L_1 = fd_results_ldr_c_absent$limpets[nrow(fd_results_ldr_c_absent)],
@@ -290,11 +290,11 @@ do.intertidal.predator.removal <- function(var_P_input, var_B_input, var_C_input
   
   
   # limpets
-  fd_results_ldr_l_absent <- do.intertidal.simulation(years_set = 250, L_1 = 0,
+  fd_results_ldr_l_absent <- do.intertidal.simulation(years_set = years_set, L_1 = 0,
                                                       var_P = var_P_input, var_B = var_B_input, var_C = var_C_input, var_L = var_L_input,
                                                       P_avg = P_avg_input, W_avg = W_avg_input)
   fd_results_ldr_l_invade <- 
-    do.intertidal.simulation(years_set = 250, 
+    do.intertidal.simulation(years_set = years_set, 
                              B_1 = fd_results_ldr_l_absent$balanus_glandula[nrow(fd_results_ldr_l_absent)],
                              C_1 = fd_results_ldr_l_absent$chthamalus_dalli[nrow(fd_results_ldr_l_absent)],
                              L_1 = 1,
@@ -309,11 +309,11 @@ do.intertidal.predator.removal <- function(var_P_input, var_B_input, var_C_input
   
   
   # whelks
-  fd_results_ldr_w_absent <- do.intertidal.simulation(years_set = 250, W_1 = 0,
+  fd_results_ldr_w_absent <- do.intertidal.simulation(years_set = years_set, W_1 = 0,
                                                       var_P = var_P_input, var_B = var_B_input, var_C = var_C_input, var_L = var_L_input,
                                                       P_avg = P_avg_input, W_avg = W_avg_input)
   fd_results_ldr_w_invade <- 
-    do.intertidal.simulation(years_set = 250, 
+    do.intertidal.simulation(years_set = years_set, 
                              B_1 = fd_results_ldr_w_absent$balanus_glandula[nrow(fd_results_ldr_w_absent)],
                              C_1 = fd_results_ldr_w_absent$chthamalus_dalli[nrow(fd_results_ldr_w_absent)],
                              L_1 = fd_results_ldr_w_absent$limpets[nrow(fd_results_ldr_w_absent)],
@@ -328,11 +328,11 @@ do.intertidal.predator.removal <- function(var_P_input, var_B_input, var_C_input
   
   
   # sea stars (pisaster)
-  fd_results_ldr_p_absent <- do.intertidal.simulation(years_set = 250, P_1 = 0,
+  fd_results_ldr_p_absent <- do.intertidal.simulation(years_set = years_set, P_1 = 0,
                                                       var_P = var_P_input, var_B = var_B_input, var_C = var_C_input, var_L = var_L_input,
                                                       P_avg = P_avg_input, W_avg = W_avg_input)
   fd_results_ldr_p_invade <- 
-    do.intertidal.simulation(years_set = 250, 
+    do.intertidal.simulation(years_set = years_set, 
                              B_1 = fd_results_ldr_p_absent$balanus_glandula[nrow(fd_results_ldr_p_absent)],
                              C_1 = fd_results_ldr_p_absent$chthamalus_dalli[nrow(fd_results_ldr_p_absent)],
                              L_1 = fd_results_ldr_p_absent$limpets[nrow(fd_results_ldr_p_absent)],

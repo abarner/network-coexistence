@@ -70,7 +70,7 @@ do.population.size.limpets <- function(S, L.prev, S.r, R, delta) {
   # S.r is the survivorship of recruits
   # R is the number of recruits
   # delta is density-dependence 
-  L <- S*L.prev + S.r*R*exp(delta*L.prev)
+  L <- S*L.prev + S.r*R #*exp(delta*L.prev)
   return(L)
 }
 
@@ -179,7 +179,8 @@ do.intertidal.simulation <- function(
   
   B_1 = 4100, # defaults to starting conditions given by forde & doak
   C_1 = 11000,
-  L_1 = 239,
+  #L_1 = 239,
+  L_1 = 400, # after gilman 2006
   W_1 = 93,
   P_1 = 1,
   total_1 = 1
@@ -190,7 +191,8 @@ do.intertidal.simulation <- function(
   
   size.B <- .000098
   size.C <- .000032
-  size.L <- .00008
+  #size.L <- .00008
+  size.L <- .0001 # after gilman 2006 ecography
   
   size.recruit.B <- .000003
   size.recruit.C <- .000003
@@ -221,7 +223,7 @@ do.intertidal.simulation <- function(
   # average annual survival of spawned gametes to postmaturity longevity = 
   # 1.46 x 10-9/m2/year, and annual mortality of gametes is 0.999
   
-  delta <- -.02 # density dependence for limpets
+  delta <- -.001 # density dependence for limpets
   p.whelk.b <- .005 # per capita whelk predation rate on balanus (asymmetry from connell 1961)
   p.whelk.c <- .001 # per capita whelk predation rate
   Y <- .001 # whelk conversion rate
