@@ -367,7 +367,8 @@ do.intertidal.predator.removal <- function(var_P_input, var_B_input, var_C_input
               results_2_b_invade = bind_rows(fd_results_ldr_b_absent, fd_results_ldr_b_invade),
               results_2_c_invade = bind_rows(fd_results_ldr_c_absent, fd_results_ldr_c_invade),
               results_2_l_invade = bind_rows(fd_results_ldr_l_absent, fd_results_ldr_l_invade),
-              results_2_p_invade = bind_rows(fd_results_ldr_p_absent, fd_results_ldr_p_invade)
+              results_2_p_invade = bind_rows(fd_results_ldr_p_absent, fd_results_ldr_p_invade),
+              results_2_w_invade = bind_rows(fd_results_ldr_w_absent, fd_results_ldr_w_invade)
               
   )
   )
@@ -532,7 +533,8 @@ do.intertidal.rbar.with.larval.var <- function(B.mean = B.mean_input, B.stdev = 
               results_2_b_invade = bind_rows(fd_results_ldr_b_absent, fd_results_ldr_b_invade),
               results_2_c_invade = bind_rows(fd_results_ldr_c_absent, fd_results_ldr_c_invade),
               results_2_l_invade = bind_rows(fd_results_ldr_l_absent, fd_results_ldr_l_invade),
-              results_2_p_invade = bind_rows(fd_results_ldr_p_absent, fd_results_ldr_p_invade)
+              results_2_p_invade = bind_rows(fd_results_ldr_p_absent, fd_results_ldr_p_invade),
+              results_2_w_invade = bind_rows(fd_results_ldr_w_absent, fd_results_ldr_w_invade)
               
   )
   )
@@ -706,7 +708,8 @@ do.intertidal.predator.removal.with.larval.var <- function(var_P_input, var_B_in
               results_2_b_invade = bind_rows(fd_results_ldr_b_absent, fd_results_ldr_b_invade),
               results_2_c_invade = bind_rows(fd_results_ldr_c_absent, fd_results_ldr_c_invade),
               results_2_l_invade = bind_rows(fd_results_ldr_l_absent, fd_results_ldr_l_invade),
-              results_2_p_invade = bind_rows(fd_results_ldr_p_absent, fd_results_ldr_p_invade)
+              results_2_p_invade = bind_rows(fd_results_ldr_p_absent, fd_results_ldr_p_invade),
+              results_2_w_invade = bind_rows(fd_results_ldr_w_absent, fd_results_ldr_w_invade)
               
   )
   )

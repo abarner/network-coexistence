@@ -926,3 +926,80 @@ test_list %>%
 dev.off()
 
 
+
+#### what do the individual time series look like at each step? ####
+
+
+fd_part_1 <- do.intertidal.rbar()
+
+fd_part_1_var_C <- mean(fd_part_1$results_1$larvae.C)
+fd_part_1_var_B <- mean(fd_part_1$results_1$larvae.B)
+fd_part_1_var_L <- mean(fd_part_1$results_1$larvae.L)
+fd_part_1_var_P <- mean(fd_part_1$results_1$larvae.P)
+fd_part_1_P_avg <- mean(fd_part_1$results_1$pisaster_ochraceus)
+fd_part_1_W_avg <- mean(fd_part_1$results_1$whelks)
+
+fd_part_3a <- do.intertidal.predator.removal(var_B_input = fd_part_1_var_B, 
+                                             var_C_input = fd_part_1_var_C, 
+                                             var_L_input = fd_part_1_var_L,
+                                             var_P_input = fd_part_1_var_P,
+                                             P_avg_input = fd_part_1_P_avg,
+                                             W_avg_input = fd_part_1_W_avg)
+
+fd_part_3b <- do.intertidal.predator.removal(var_B_input = fd_part_1_var_B, 
+                                             var_C_input = fd_part_1_var_C, 
+                                             var_L_input = fd_part_1_var_L,
+                                             var_P_input = NULL,
+                                             P_avg_input = NULL,
+                                             W_avg_input = NULL)
+
+fd_part_3c <- do.intertidal.predator.removal(var_B_input = NULL, 
+                                             var_C_input = NULL, 
+                                             var_L_input = NULL,
+                                             var_P_input = fd_part_1_var_P,
+                                             P_avg_input = fd_part_1_P_avg,
+                                             W_avg_input = fd_part_1_W_avg)
+
+list(r_bar = fd_part_1$r_bar_result,
+     delta_0 = fd_part_3a$r_bar_result,
+     delta_p = fd_part_3b$r_bar_result,
+     delta_c = fd_part_3c$r_bar_result) %>%
+  bind_rows(.id = "id") -> fd_part_3_df
+
+fd_part_3_df  %>%
+  spread(key = "id", value = r_bar) %>%
+  mutate(delta_cp = r_bar - (delta_0 + delta_c + delta_p)) -> fd_part_3_total
+
+raw_output_plotting_fxn <- function(df) {
+  list(first_to_equilib = df$results_1,
+       bg_invade = df$results_2_b_invade,
+       cd_invade = df$results_2_c_invade,
+       lm_invade = df$results_2_l_invade,
+       p_invade =df$results_2_p_invade) %>%
+    bind_rows(.id = "partition_step") %>%
+    group_by(partition_step) %>%
+    mutate(rownum = 1:n()) %>%
+    top_n(100, rownum) %>%
+    return()
+}
+
+
+list(r_bar = raw_output_plotting_fxn(fd_part_1),
+     delta0 = raw_output_plotting_fxn(fd_part_3a),
+     deltap = raw_output_plotting_fxn(fd_part_3b),
+     deltac = raw_output_plotting_fxn(fd_part_3c)) %>%
+  bind_rows(.id = "coexistence_step") %>%
+  group_by(coexistence_step, partition_step) %>%
+  mutate(timestep = 1:n()) %>%
+  ungroup() %>%
+  gather(balanus_glandula:pisaster_ochraceus, key = "species", value = "abundance") %>%
+  ggplot(aes(x = timestep, y = abundance, color = partition_step)) +
+  geom_point(size = 1) +
+  geom_line() +
+  facet_grid(species ~ coexistence_step, scales = "free")
+
+
+## questions: what is going on at each of these steps?
+# why are limpets too high and barn too low?
+# why are predators fixed in variation at step delta 0 and deltac?
+# need to fix the timesteps mismatch (make sure stop at same point each time)
