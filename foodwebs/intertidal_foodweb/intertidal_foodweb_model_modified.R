@@ -54,12 +54,19 @@ do.population.size.barnacles <- function(S, p.whelk, W.prev, X.prev, S.r, R, p.s
   
   # rewritten from previous form to make more intuitive sense
   X_before_predation <- S*X.prev
-  if (X_before_predation < 0) {X_before_predation <- 0}
+  if (X_before_predation < 0) {
+    X_before_predation <- 0
+  } else {
+    X <- X_before_predation + S.r*R - p.whelk*W.prev*X_before_predation - p.star*P.prev*X_before_predation
+  }
   
-  X <- X_before_predation + S.r*R - p.whelk*W.prev*X_before_predation - p.star*P.prev*X_before_predation
-  if (X < 0) {X <- 0}
+  if (X < 0) {
+    X <- 0
+    return(X)
+  } else {
+    return (X)
+    }
   
-  return (X)
 }
 
 do.population.size.limpets <- function(S, L.prev, S.r, R, delta) {
@@ -179,11 +186,12 @@ do.intertidal.simulation <- function(
   
   B_1 = 4100, # defaults to starting conditions given by forde & doak
   C_1 = 11000,
-  #L_1 = 239,
-  L_1 = 400, # after gilman 2006
+  L_1 = 239,
+  #L_1 = 400, # after gilman 2006
   W_1 = 93,
   P_1 = 1,
   total_1 = 1
+  
 ) {
   
   # ----------------------------------------------------------------------------------------------------
@@ -191,8 +199,8 @@ do.intertidal.simulation <- function(
   
   size.B <- .000098
   size.C <- .000032
-  #size.L <- .00008
-  size.L <- .0001 # after gilman 2006 ecography
+  size.L <- .00008
+  #size.L <- .0001 # after gilman 2006 ecography
   
   size.recruit.B <- .000003
   size.recruit.C <- .000003
@@ -223,7 +231,7 @@ do.intertidal.simulation <- function(
   # average annual survival of spawned gametes to postmaturity longevity = 
   # 1.46 x 10-9/m2/year, and annual mortality of gametes is 0.999
   
-  delta <- -.001 # density dependence for limpets
+  delta <- -.002 # density dependence for limpets
   p.whelk.b <- .005 # per capita whelk predation rate on balanus (asymmetry from connell 1961)
   p.whelk.c <- .001 # per capita whelk predation rate
   Y <- .001 # whelk conversion rate

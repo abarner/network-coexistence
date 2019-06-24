@@ -1,0 +1,341 @@
+---
+title: "Why don't limpets coexist in our model?"
+output: pdf_document
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
+
+I'm having trouble getting limpets to coexist in the model. I'll step through some of the troubleshooting I've done to try to figure out why.
+
+```{r, echo=TRUE}
+library(tidyverse)
+source("foodwebs/intertidal_foodweb/intertidal_foodweb_model_modified.R")
+source("foodwebs/intertidal_foodweb/do_intertidal_partition.R")
+```
+
+# The problem
+
+When you run the simulation and look at the time series output, limpets seem to be fine
+
+```{r}
+read_csv("fd_results.csv") %>%
+  gather(balanus_glandula:free_space, key = "species",
+         value = "abundance") %>%
+  ggplot(aes(x = time, y = abundance)) +
+  geom_point(size = 2) +
+  geom_line() +
+  facet_wrap(~species, scales = "free") +
+  theme(legend.position = "none", 
+        axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+\pagebreak
+
+However, when you partition coexistence, their r-bar is negative, indicating that they do not coexist with the two barnacle species.
+
+```{r}
+read_csv("fd_part_3_total_unmodified.csv") %>%
+  gather(delta_0:delta_cp, key = "coexistence_partition", value = "coexistence_strength") %>%
+  mutate(coexistence_partition = factor(coexistence_partition, levels = c("r_bar", 
+                                                                          "delta_0", "delta_c", 
+                                                                          "delta_p", "delta_cp"))) %>%
+  ggplot(aes(x = coexistence_partition, y = coexistence_strength, color = coexistence_partition)) +
+  geom_bar(stat = "identity", aes(fill = coexistence_partition)) + 
+  facet_grid( ~ species) +
+  geom_hline(yintercept = 0) +
+  theme(legend.position = "none", 
+        axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+\pagebreak
+
+# Barnacle survival rate and limpet coexistence
+
+First I tried to decrease the survival rates of balanus glandula adults, because they are a top competitor, to see if limpets would coexist.
+
+Decreased the survival rates of BG from 0.8 to 0.75 for both adults and recruits:
+
+```{r}
+read_csv("fd_part_3_total_lowerbarn.csv") %>%
+  gather(delta_0:delta_cp, key = "coexistence_partition", value = "coexistence_strength") %>%
+  mutate(coexistence_partition = factor(coexistence_partition, levels = c("r_bar", 
+                                                                          "delta_0", "delta_c", 
+                                                                          "delta_p", "delta_cp"))) %>%
+  ggplot(aes(x = coexistence_partition, y = coexistence_strength, color = coexistence_partition)) +
+  geom_bar(stat = "identity", aes(fill = coexistence_partition)) + 
+  facet_grid( ~ species) +
+  geom_hline(yintercept = 0) +
+  theme(legend.position = "none", 
+        axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+Did not help.
+
+\pagebreak
+
+Next, I decreased both barnacle species survival rates, down to 0.7.
+
+```{r}
+read_csv("fd_part_3_total_lowerbothbarn.csv") %>%
+  gather(delta_0:delta_cp, key = "coexistence_partition", value = "coexistence_strength") %>%
+  mutate(coexistence_partition = factor(coexistence_partition, levels = c("r_bar", 
+                                                                          "delta_0", "delta_c", 
+                                                                          "delta_p", "delta_cp"))) %>%
+  ggplot(aes(x = coexistence_partition, y = coexistence_strength, color = coexistence_partition)) +
+  geom_bar(stat = "identity", aes(fill = coexistence_partition)) + 
+  facet_grid( ~ species) +
+  geom_hline(yintercept = 0) +
+  theme(legend.position = "none", 
+        axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+Also did not help limpets, but changed barnacle coexistence dynamics quite a bit.
+
+\pagebreak
+
+Next, try balanus slightly higher than chthamalus, to reflect realistic dynamics.
+
+```{r}
+read_csv("fd_part_3_total_bghigher.csv") %>%
+  gather(delta_0:delta_cp, key = "coexistence_partition", value = "coexistence_strength") %>%
+  mutate(coexistence_partition = factor(coexistence_partition, levels = c("r_bar", 
+                                                                          "delta_0", "delta_c", 
+                                                                          "delta_p", "delta_cp"))) %>%
+  ggplot(aes(x = coexistence_partition, y = coexistence_strength, color = coexistence_partition)) +
+  geom_bar(stat = "identity", aes(fill = coexistence_partition)) + 
+  facet_grid( ~ species) +
+  geom_hline(yintercept = 0) +
+  theme(legend.position = "none", 
+        axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+Again did not help limpets. Indicates that barnacle survival rate isn't driving limpet coexistence dynamics.
+
+\pagebreak
+
+# Lower variance in larval supply and limpet coexistence
+
+From FD paper: when variance in larval supply decreases, then limpet density increased. So the next scenario is to vary the variance in larval supply while the means are all high.
+
+Across the top row: increasing variance in larval supply, with simulation run 3 times.
+
+```{r}
+read_csv("test_var_list_2_df.csv") %>%
+  mutate(larval_scenario = factor(larval_scenario, levels = c("low", "med", "high"))) %>%
+    mutate(coexistence_partition = factor(coexistence_partition, levels = c("r_bar", 
+                                                                          "delta_0", "delta_c", 
+                                                                          "delta_p", "delta_cp"))) %>%
+  ggplot(aes(x = coexistence_partition, y = mean_cs)) +
+  geom_bar(stat = "identity", aes(fill = coexistence_partition)) + 
+  geom_errorbar(aes(ymin = mean_cs - se_cs, ymax = mean_cs + se_cs), color = "black", width = 0.2) +
+  facet_grid(species ~ larval_scenario, scales = "free") +
+  geom_hline(yintercept = 0) +
+  theme(legend.position = "none", 
+        axis.text.x = element_text(angle = 90, hjust = 1)) +
+  xlab("Mechanistic partitioning") +
+  ylab("Growth rate when rare")
+```
+
+Still no positive coexistence from limpets.
+
+\pagebreak
+
+# Larval limpet limitation
+
+Maybe limpet abundance is just too low - and ramping up larval supply could help them achieve dominance. So increased mean larval supply by 10-20x and ran for medium and high variance in supply (simulation failed at the "low" scenario).
+
+```{r}
+read_csv("test_var_list_3_df.csv") %>% 
+  mutate(larval_scenario = factor(larval_scenario, levels = c("low", "med", "high"))) %>%
+    mutate(coexistence_partition = factor(coexistence_partition, levels = c("r_bar", 
+                                                                          "delta_0", "delta_c", 
+                                                                          "delta_p", "delta_cp"))) %>%
+  ggplot(aes(x = coexistence_partition, y = mean_cs)) +
+  geom_bar(stat = "identity", aes(fill = coexistence_partition)) + 
+  geom_errorbar(aes(ymin = mean_cs - se_cs, ymax = mean_cs + se_cs), color = "black", width = 0.2) +
+  facet_grid(species ~ larval_scenario, scales = "free") +
+  geom_hline(yintercept = 0) +
+  theme(legend.position = "none", 
+        axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  xlab("Mechanistic partitioning") +
+  ylab("Growth rate when rare")
+```
+
+Still no change in limpet coexistence.
+
+\pagebreak
+
+Because chthamalus is the subdominant barnacle competitor, maybe higher larval supply for CD could allow limpets to coexist? Try increasing CD larval supply:
+
+```{r}
+read_csv("fd_results_cd_df.csv") %>%
+    mutate(coexistence_partition = factor(coexistence_partition, levels = c("r_bar", 
+                                                                          "delta_0", "delta_c", 
+                                                                          "delta_p", "delta_cp"))) %>%
+  ggplot(aes(x = coexistence_partition, y = mean_cs)) +
+  geom_bar(stat = "identity", aes(fill = coexistence_partition)) + 
+  geom_errorbar(aes(ymin = mean_cs - se_cs, ymax = mean_cs + se_cs), color = "black", width = 0.2) +
+  facet_wrap(~ species, scales = "free") +
+  geom_hline(yintercept = 0) +
+  theme(legend.position = "none", 
+        axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  xlab("Mechanistic partitioning") +
+  ylab("Growth rate when rare")
+```
+
+Still doesn't help. 
+
+\pagebreak
+
+Try BOTH CD and limpets at high larval supply:
+
+```{r}
+read_csv("fd_results_cd_l_df.csv") %>%
+    mutate(coexistence_partition = factor(coexistence_partition, levels = c("r_bar", 
+                                                                          "delta_0", "delta_c", 
+                                                                          "delta_p", "delta_cp"))) %>%
+  ggplot(aes(x = coexistence_partition, y = mean_cs)) +
+  geom_bar(stat = "identity", aes(fill = coexistence_partition)) + 
+  geom_errorbar(aes(ymin = mean_cs - se_cs, ymax = mean_cs + se_cs), color = "black", width = 0.2) +
+  facet_wrap(~ species, scales = "free") +
+  geom_hline(yintercept = 0) +
+  theme(legend.position = "none", 
+        axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  xlab("Mechanistic partitioning") +
+  ylab("Growth rate when rare")
+```
+
+Nope.
+
+\pagebreak
+
+# Limpet "density-dependent" parameter
+
+The limpet equation has a "density-dependent parameter" (delta) because there are no limpet predators in the model. It was set by Forde and Doak to  be -0.02, but for no real reason. I also have always had trouble getting limpet populations to stabilize close to their initial starting values, suggesting density dependence (or interspecific competition) is keeping it low.
+
+Here, I lowered the density-dependent parameter by an order of magnitude and ran CD and limpet supply on high.
+
+```{r}
+read_csv("fd_results_cd_l_delta_df.csv") %>%
+   mutate(coexistence_partition = factor(coexistence_partition, levels = c("r_bar", 
+                                                                          "delta_0", "delta_c", 
+                                                                          "delta_p", "delta_cp"))) %>%
+  ggplot(aes(x = coexistence_partition, y = mean_cs)) +
+  geom_bar(stat = "identity", aes(fill = coexistence_partition)) + 
+  geom_errorbar(aes(ymin = mean_cs - se_cs, ymax = mean_cs + se_cs), color = "black", width = 0.2) +
+  facet_wrap(~species, scales = "free") +
+  geom_hline(yintercept = 0) +
+  theme(legend.position = "none", 
+        axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  xlab("Mechanistic partitioning") +
+  ylab("Growth rate when rare")
+```
+
+No improvement.
+
+\pagebreak
+
+# Limpet size and coexistence
+
+Because competition here is determined based on a combination of abundance and individual size, perhaps limpets are not big enough in the model to coexist. 
+
+Here, I changed the density dependent parameter back and updated limpet size and density based on [Gilman 2006](https://doi.org/10.1111/j.0906-7590.2006.04572.x).
+
+```{r}
+read_csv("fd_part_3_total_size.csv") %>%
+  gather(delta_0:delta_cp, key = "coexistence_partition", value = "coexistence_strength") %>%
+  mutate(coexistence_partition = factor(coexistence_partition, levels = c("r_bar", 
+                                                                          "delta_0", "delta_c", 
+                                                                          "delta_p", "delta_cp"))) %>%
+  ggplot(aes(x = coexistence_partition, y = coexistence_strength, color = coexistence_partition)) +
+  geom_bar(stat = "identity", aes(fill = coexistence_partition)) + 
+  facet_grid( ~ species) +
+  geom_hline(yintercept = 0) +
+  theme(legend.position = "none", 
+        axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+Also does not help coexistence. Might be able to come back to this and explore it more by pushing up limpet size and density, but don't have any biologically-motivated reason for doing so.
+
+\pagebreak
+
+# Simulation length
+
+Perhaps simulation isn't going long enough? Run longer:
+
+```{r}
+read_csv("fd_part_3_total_years.csv") %>%
+  gather(delta_0:delta_cp, key = "coexistence_partition", value = "coexistence_strength") %>%
+  mutate(coexistence_partition = factor(coexistence_partition, levels = c("r_bar", 
+                                                                          "delta_0", "delta_c", 
+                                                                          "delta_p", "delta_cp"))) %>%
+  ggplot(aes(x = coexistence_partition, y = coexistence_strength, color = coexistence_partition)) +
+  geom_bar(stat = "identity", aes(fill = coexistence_partition)) + 
+  facet_grid( ~ species) +
+  geom_hline(yintercept = 0) +
+  theme(legend.position = "none", 
+        axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+\pagebreak
+
+# Density-dependence and limpet recruitment
+
+One problem seems to be that limpet recruitment is so severely density-dependent - it's saturating at a very low number in the model.
+
+The number of new recruits added to adult population size is, if 700 recruits are in the larval pool and the population size is the starting population size:
+
+```{r, echo = TRUE} 
+0.88 * 700 * exp(-0.02 * 239)
+```
+
+Only 5 new adults! So if we remove the density dependent parameter all together:
+
+```{r}
+read_csv("fd_part_3_total_nod.csv") %>%
+  gather(delta_0:delta_cp, key = "coexistence_partition", value = "coexistence_strength") %>%
+  mutate(coexistence_partition = factor(coexistence_partition, levels = c("r_bar", 
+                                                                          "delta_0", "delta_c", 
+                                                                          "delta_p", "delta_cp"))) %>%
+  ggplot(aes(x = coexistence_partition, y = coexistence_strength, color = coexistence_partition)) +
+  geom_bar(stat = "identity", aes(fill = coexistence_partition)) + 
+  facet_grid( ~ species) +
+  geom_hline(yintercept = 0) +
+  theme(legend.position = "none", 
+        axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+That also does not help.
+
+# Everything combined
+
+Combine everything that might possibly help the limpets: decreased density dependence, larger size, higher density, and more larvae. Across the columns: larval supply levels for limpets alone were increased, starting at 1x supply to 10x supply. Nothing made a large difference.
+
+```{r}
+read_csv("test_var_list_all_df.csv") %>%
+  mutate(larval_scenario = factor(larval_scenario, levels = c("low_x1", "med_x2", "high_x10"))) %>%
+    mutate(coexistence_partition = factor(coexistence_partition, levels = c("r_bar", 
+                                                                          "delta_0", "delta_c", 
+                                                                          "delta_p", "delta_cp"))) %>%
+  ggplot(aes(x = coexistence_partition, y = mean_cs)) +
+  geom_bar(stat = "identity", aes(fill = coexistence_partition)) + 
+  geom_errorbar(aes(ymin = mean_cs - se_cs, ymax = mean_cs + se_cs), color = "black", width = 0.2) +
+  facet_grid(species ~ larval_scenario, scales = "free") +
+  geom_hline(yintercept = 0) +
+  theme(legend.position = "none", 
+        axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  xlab("Mechanistic partitioning") +
+  ylab("Growth rate when rare")
+```
+
+# Summary
+
+No matter what changes I make, I see the same generic pattern: no limpet coexistence, delta_c is very negative and delta_cp is very positive. This suggests to me there is something structural about the model that prevents the coexistence of limpets. They both do not have a positive invasion growth rate, are out competed by barnacles, and do not "benefit" from predation.
+
+Honestly I'm not sure whether the limpets EVER coexisted in the original model.
+
+
+

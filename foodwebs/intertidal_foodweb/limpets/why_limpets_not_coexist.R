@@ -1,6 +1,6 @@
 
 ## why aren't limpets coexisting in our simulations?
-
+library(tidyverse)
 
 #### show the problem ####
 
@@ -78,6 +78,10 @@ fd_part_3_total_unmodified %>%
 ## limpets also do not coexist even if their larval supply rates are higher,
 ## though the coexistence strength weakens from negative to more neutral
 
+# write out results for Rmarkdown
+write_csv(fd_results, "fd_results.csv")
+write_csv(fd_part_3_total_unmodified, "fd_part_3_total_unmodified.csv")
+
 #### barnacle survival rate and limpet coexistence ####
 
 ## some looking through old notes seems to indicate that increasing the survival
@@ -142,6 +146,7 @@ fd_part_3_total_lowerbarn %>%
   facet_grid( ~ species) +
   geom_hline(yintercept = 0) +
   theme(legend.position = "none")
+write_csv(fd_part_3_total_lowerbarn, "fd_part_3_total_lowerbarn.csv")
 
 ## still not quite right
 
@@ -202,6 +207,7 @@ fd_part_3_total_lowerbothbarn %>%
   geom_hline(yintercept = 0) +
   theme(legend.position = "none")
 
+write_csv(fd_part_3_total_lowerbothbarn, "fd_part_3_total_lowerbothbarn.csv")
 ## still no limpet coexistence, but barnacle coexistence dynamics changed a lot
 
 
@@ -261,6 +267,7 @@ fd_part_3_total_bghigher %>%
   geom_hline(yintercept = 0) +
   theme(legend.position = "none")
 
+write_csv(fd_part_3_total_bghigher, "fd_part_3_total_bghigher.csv")
 ## still no fix
 
 
@@ -471,7 +478,15 @@ test_var_list_2 %>%
   ylab("Growth rate when rare")
 
 ### still no coexistence
-
+test_var_list_2 %>%
+  bind_rows(.id = "larval_scenario") %>%
+  group_by(larval_scenario, coexistence_partition, species) %>%
+  summarise(mean_cs = mean(coexistence_strength),
+            sd_cs = sd(coexistence_strength),
+            n_cs = n()) %>%
+  mutate(se_cs = sd_cs/sqrt(n_cs)) %>%
+  ungroup() %>%
+  write_csv("test_var_list_2_df.csv")
 
 
 #### set limpet supply rates to REALLY high? ####
@@ -532,6 +547,15 @@ test_var_list_3 %>%
 
 ## increasing the larval supply of limpets to 10-20x the original amount
 # does NOT increase their coexistence
+test_var_list_3 %>%
+  bind_rows(.id = "larval_scenario") %>% drop_na() %>%
+  group_by(larval_scenario, coexistence_partition, species) %>%
+  summarise(mean_cs = mean(coexistence_strength),
+            sd_cs = sd(coexistence_strength),
+            n_cs = n()) %>%
+  mutate(se_cs = sd_cs/sqrt(n_cs)) %>%
+  ungroup() %>%
+  write_csv("test_var_list_3_df.csv")
 
 ### try just CD high ####
 
@@ -574,6 +598,16 @@ fd_results_cd %>%
   ylab("Growth rate when rare")
 ## still see no coexistence.
 
+fd_results_cd %>%
+  bind_rows(.id = "larval_scenario") %>% drop_na() %>%
+  group_by(larval_scenario, coexistence_partition, species) %>%
+  summarise(mean_cs = mean(coexistence_strength),
+            sd_cs = sd(coexistence_strength),
+            n_cs = n()) %>%
+  mutate(se_cs = sd_cs/sqrt(n_cs)) %>%
+  ungroup() %>%
+  write_csv("fd_results_cd_df.csv")
+
 ## what if CD AND limpets high?
 tibble(scenario = rep(1, 4),
        species = c("B", "C", "L", "P"),
@@ -615,7 +649,15 @@ fd_results_cd_l %>%
   ylab("Growth rate when rare")
 
 ## closer to coexistence
-
+fd_results_cd_l %>%
+  bind_rows(.id = "larval_scenario") %>% drop_na() %>%
+  group_by(larval_scenario, coexistence_partition, species) %>%
+  summarise(mean_cs = mean(coexistence_strength),
+            sd_cs = sd(coexistence_strength),
+            n_cs = n()) %>%
+  mutate(se_cs = sd_cs/sqrt(n_cs)) %>%
+  ungroup() %>%
+  write_csv("fd_results_cd_l_df.csv")
 
 #### change density dependent parameter ####
 
@@ -650,6 +692,16 @@ fd_results_cd_l_delta %>%
         axis.text.x = element_text(angle = 90, hjust = 1)) + 
   xlab("Mechanistic partitioning") +
   ylab("Growth rate when rare")
+
+fd_results_cd_l_delta %>%
+  bind_rows(.id = "larval_scenario") %>% drop_na() %>%
+  group_by(larval_scenario, coexistence_partition, species) %>%
+  summarise(mean_cs = mean(coexistence_strength),
+            sd_cs = sd(coexistence_strength),
+            n_cs = n()) %>%
+  mutate(se_cs = sd_cs/sqrt(n_cs)) %>%
+  ungroup() %>%
+  write_csv("fd_results_cd_l_delta_df.csv")
 
 ## see growth rate of CD go way up (for delta-c), but still no coexistence
 # of limpets
@@ -822,6 +874,8 @@ fd_part_3_total_size %>%
   theme(legend.position = "none")
 ## doesn't help limpet coexistence
 
+write_csv(fd_part_3_total_size, "fd_part_3_total_size.csv")
+
 
 #### break down each coexistence step - why not coexist? ####
 
@@ -888,6 +942,7 @@ list(r_bar = fd_part_1$r_bar_result,
 fd_part_3_df_years  %>%
   spread(key = "id", value = r_bar) %>%
   mutate(delta_cp = r_bar - (delta_0 + delta_c + delta_p)) -> fd_part_3_total_years
+write_csv(fd_part_3_total_years, "fd_part_3_total_years.csv")
 
 fd_part_3_total_years %>%
   gather(delta_0:delta_cp, key = "coexistence_partition", value = "coexistence_strength") %>%
@@ -1103,6 +1158,7 @@ list(r_bar = fd_part_1$r_bar_result,
 fd_part_3_df_nod  %>%
   spread(key = "id", value = r_bar) %>%
   mutate(delta_cp = r_bar - (delta_0 + delta_c + delta_p)) -> fd_part_3_total_nod
+write_csv(fd_part_3_total_nod, "fd_part_3_total_nod.csv")
 
 fd_part_3_total_nod %>%
   gather(delta_0:delta_cp, key = "coexistence_partition", value = "coexistence_strength") %>%
@@ -1118,3 +1174,61 @@ fd_part_3_total_nod %>%
 
 ## still no!!!!
 
+#### combine ALL of the changes ####
+
+# high recruitment, larger size, less density dependence
+# delta = -.001
+
+bind_rows(list(filter(larval_supply_full, 
+                      variance_supply_level == "high" & mean_supply_level == "high"),
+               filter(larval_supply_full, variance_supply_level == "high" & mean_supply_level == "high"),
+               filter(larval_supply_full, variance_supply_level == "high" & mean_supply_level == "high")),
+          .id = "scenario") %>%
+  mutate(limpet_multiplier = ifelse(scenario == "1", 1,
+                                    ifelse(scenario == "2", 2, 10))) %>%
+  mutate(mean_recruit = ifelse(species == "L", mean_recruit * limpet_multiplier,
+                               mean_recruit),
+         variance_recruit = ifelse(species == "L", variance_recruit * limpet_multiplier,
+                                   variance_recruit)) %>%
+  select(-mean_supply_level, -variance_supply_level, -limpet_multiplier) %>%
+  gather(key = variable, value = value, mean_recruit, variance_recruit) %>%
+  unite(temp, species, variable) %>%
+  spread(temp, value) -> larval_scenarios_input
+
+test_var_list_all <- vector(mode = "list", length = 3)
+names(test_var_list_all) <- c("low_x1", "med_x2", "high_x10")
+
+# note - loop may fail but seems to be due to a time out somehow
+for (l in 3:3) {
+  print(c("LOOP = ", l))
+  test_var_list_all[[l]] <- do.larval.supply.simulation(k = l, n_sim = 3)
+}
+
+test_var_list_all %>%
+  bind_rows(.id = "larval_scenario") %>% drop_na() %>%
+  group_by(larval_scenario, coexistence_partition, species) %>%
+  summarise(mean_cs = mean(coexistence_strength),
+            sd_cs = sd(coexistence_strength),
+            n_cs = n()) %>%
+  mutate(se_cs = sd_cs/sqrt(n_cs)) %>%
+  ungroup() %>%
+  mutate(larval_scenario = factor(larval_scenario, levels = c("low_x1", "med_x2", "high_x10"))) %>%
+  ggplot(aes(x = coexistence_partition, y = mean_cs)) +
+  geom_bar(stat = "identity", aes(fill = coexistence_partition)) + 
+  geom_errorbar(aes(ymin = mean_cs - se_cs, ymax = mean_cs + se_cs), color = "black", width = 0.2) +
+  facet_grid(species ~ larval_scenario, scales = "free") +
+  geom_hline(yintercept = 0) +
+  theme(legend.position = "none", 
+        axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  xlab("Mechanistic partitioning") +
+  ylab("Growth rate when rare")
+
+test_var_list_all %>%
+  bind_rows(.id = "larval_scenario") %>% drop_na() %>%
+  group_by(larval_scenario, coexistence_partition, species) %>%
+  summarise(mean_cs = mean(coexistence_strength),
+            sd_cs = sd(coexistence_strength),
+            n_cs = n()) %>%
+  mutate(se_cs = sd_cs/sqrt(n_cs)) %>%
+  ungroup() %>%
+  write_csv("test_var_list_all_df.csv")
