@@ -46,16 +46,63 @@ larval_scenarios_for_full_run %>%
   unite(temp, species, variable) %>%
   spread(temp, value) -> larval_scenarios_input # need it to be named this
 
-
 sim_output_list <- vector(mode = "list", length = 6)
 names(sim_output_list) <- c("high", "low", "balanus_high", "chthamalus_high", 
                             "limpets_high", "pisaster_high")
 
-# note - loop may fail but seems to be due to a time out somehow
 for (l in 1:length(sim_output_list)) {
   print(c("LOOP = ", l))
   sim_output_list[[l]] <- do.larval.supply.simulation(k = l, n_sim = 100)
 }
+
+sim_output_list %>%
+  bind_rows(.id = "larval_scenario") %>%
+  write_csv("final_larval_maintext_results.csv")
+
+sim_output_list %>%
+  bind_rows(.id = "larval_scenario") %>%
+  group_by(larval_scenario, coexistence_partition, species) %>%
+  summarise(mean_cs = mean(coexistence_strength),
+            sd_cs = sd(coexistence_strength),
+            n_cs = n()) %>%
+  mutate(se_cs = sd_cs/sqrt(n_cs))
+
+# check to see if all the runs are within reasonable bounds
+sim_output_list %>%
+  bind_rows(.id = "larval_scenario") %>%
+  filter(coexistence_strength > 10)
+
+  # want those specifically to run again one more time
+    # sim_output_list %>%
+    #   bind_rows(.id = "larval_scenario") %>%
+    #   filter(coexistence_strength > 10) %>%
+    #   distinct(larval_scenario, simulation_loop) %>%
+    #   group_by(larval_scenario) %>%
+    #   summarise(n_loops = n()) -> scenarios_to_run_again
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+cols<-c(1,6,3,8,2)
+cbPalette <- cbbPalette[cols]
+
+fad<-cbPalette
+xlab=c(expression("r"[i]-"r"[r]) ,
+       expression(Delta[i]^0),
+       expression(Delta[i]^P),
+       expression(Delta[i]^E),
+       expression(Delta[i]^{E*P}))
 
 sim_output_list %>%
   bind_rows(.id = "larval_scenario") %>%
@@ -64,7 +111,43 @@ sim_output_list %>%
             sd_cs = sd(coexistence_strength),
             n_cs = n()) %>%
   mutate(se_cs = sd_cs/sqrt(n_cs)) %>%
-  write_csv("final_larval_maintext_results.csv")
+  ungroup() %>%
+  mutate(species = fct_recode(factor(species),
+                              `Balanus` = "balanus_glandula",
+                              `Chthamalus` = "chthamalus_dalli", 
+                              Limpets = "limpets")) %>%
+  mutate(larval_scenario = fct_recode(factor(larval_scenario,
+                                             levels = c(
+                                               "low", "balanus_high",
+                                               "chthamalus_high", "limpets_high",
+                                               "pisaster_high", "high"
+                                             )),
+                                      `All low` = "low",
+                                      `Balanus high` = "balanus_high",
+                                      `Chthamalus high` = "chthamalus_high",
+                                      `Limpets high` = "limpets_high", 
+                                      `Pisaster high` = "pisaster_high",
+                                      `All high` = "high")) %>%
+  mutate(coexistence_partition = factor(coexistence_partition,
+                                        levels = c(
+                                          "r_bar",
+                                          "delta_0", 
+                                          "delta_p",
+                                          "delta_c",
+                                          "delta_cp"
+                                        ))) %>% 
+  ggplot(aes(x = coexistence_partition, y = mean_cs)) +
+  geom_bar(stat = "identity", aes(fill = coexistence_partition)) + 
+  geom_errorbar(aes(ymin = mean_cs - se_cs, ymax = mean_cs + se_cs), color = "black", width = 0.2) +
+  facet_grid(species ~ larval_scenario, scales = "free") +
+  geom_hline(yintercept = 0) +
+  scale_fill_manual(values=fad) +
+  theme_bw() +
+  theme(legend.position = "none", 
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + 
+  #scale_x_discrete(labels=xlab) + 
+  xlab("Mechanistic partitioning") +
+  ylab("Growth rate when rare")
 
 
 
