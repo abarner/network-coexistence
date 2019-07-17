@@ -378,7 +378,6 @@ do.intertidal.predator.removal <- function(var_P_input, var_B_input, var_C_input
 
 #### functions to run coexistence partitioning on +/- variation in predator abundance overall and allow variation in larval supply ####
 
-
 do.intertidal.rbar.with.larval.var <- function(B.mean = B.mean_input, B.stdev = B.stdev_input, 
                                                C.mean = C.mean_input, C.stdev = C.stdev_input,
                                                L.mean = L.mean_input, L.stdev = L.stdev_input, 

@@ -925,10 +925,13 @@ test_list %>%
   ylab("Growth rate when rare")
 dev.off()
 
+# how many got run here:
+test_list %>%
+  bind_rows(.id = "larval_scenario") %>%
+  distinct(larval_scenario, simulation_loop) # 10 reps per scenario
 
 
 #### what do the individual time series look like at each step? ####
-
 
 fd_part_1 <- do.intertidal.rbar()
 

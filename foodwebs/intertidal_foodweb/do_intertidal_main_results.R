@@ -4,7 +4,7 @@
 
 #### run overall partition, low, high supplies ####
 
-# have 4 scenarios to run
+# have 6 scenarios to run
 # 100 x each
 
 # want to run across full larval scenarios (redo this)
@@ -38,23 +38,21 @@ larval_scenarios_for_full_run <- tribble (
 
 larval_scenarios_for_full_run %>%
   left_join(larval_supply) %>%
-  select(-supply_level, -variance_recruit) %>%
-  mutate(supply_level = "med") %>%
-  left_join(select(larval_supply, -mean_recruit)) %>%
+  # select(-supply_level, -variance_recruit) %>%
+  # mutate(supply_level = "med") %>%
+  # left_join(select(larval_supply, -mean_recruit)) %>%
   select(-supply_level) %>%
   gather(key = variable, value = value, mean_recruit, variance_recruit) %>%
   unite(temp, species, variable) %>%
   spread(temp, value) -> larval_scenarios_input # need it to be named this
 
 
-sim_output_list <- vector(mode = "list", length = 4)
-names(sim_output_list) <- c("high_mean_high_var",
-                      "high_mean_low_var",
-                      "low_mean_high_var",
-                      "low_mean_low_var")
+sim_output_list <- vector(mode = "list", length = 6)
+names(sim_output_list) <- c("high", "low", "balanus_high", "chthamalus_high", 
+                            "limpets_high", "pisaster_high")
 
 # note - loop may fail but seems to be due to a time out somehow
-for (l in 1:4) {
+for (l in 1:length(sim_output_list)) {
   print(c("LOOP = ", l))
   sim_output_list[[l]] <- do.larval.supply.simulation(k = l, n_sim = 100)
 }
@@ -66,7 +64,7 @@ sim_output_list %>%
             sd_cs = sd(coexistence_strength),
             n_cs = n()) %>%
   mutate(se_cs = sd_cs/sqrt(n_cs)) %>%
-  filter(species == "limpets" & coexistence_partition == "r_bar")
+  write_csv("final_larval_maintext_results.csv")
 
 
 
