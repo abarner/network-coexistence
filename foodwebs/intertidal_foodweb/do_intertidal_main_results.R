@@ -1,5 +1,13 @@
 
+#### Source simulation functions ####
 
+source("foodwebs/intertidal_foodweb/intertidal_foodweb_model_modified.R")
+source("foodwebs/intertidal_foodweb/do_intertidal_partition.R")
+
+
+#### Load packages ####
+
+library(tidyverse)
 
 
 #### run overall partition, low, high supplies ####
@@ -52,7 +60,7 @@ names(sim_output_list) <- c("high", "low", "balanus_high", "chthamalus_high",
 
 for (l in 1:length(sim_output_list)) {
   print(c("LOOP = ", l))
-  sim_output_list[[l]] <- do.larval.supply.simulation(k = l, n_sim = 100)
+  sim_output_list[[l]] <- do.larval.supply.simulation(k = l, n_sim = 10)
 }
 
 sim_output_list %>%
@@ -236,6 +244,30 @@ sim_output_df %>%
   scale_x_discrete(labels=xlab) + 
   xlab("Mechanistic partitioning") +
   ylab("Growth rate when rare")
+
+
+
+#### results vs. larval supply ####
+
+# results above are for covarying means & sd. in other words, low mean larval supply & low
+# variation in larval supply, vs. high mean larval supply & high variation in larval supply
+
+# do results differ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

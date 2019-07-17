@@ -231,7 +231,7 @@ do.intertidal.simulation <- function(
   # average annual survival of spawned gametes to postmaturity longevity = 
   # 1.46 x 10-9/m2/year, and annual mortality of gametes is 0.999
   
-  delta <- -.002 # density dependence for limpets
+  delta <- -.02 # density dependence for limpets
   p.whelk.b <- .005 # per capita whelk predation rate on balanus (asymmetry from connell 1961)
   p.whelk.c <- .001 # per capita whelk predation rate
   Y <- .001 # whelk conversion rate
