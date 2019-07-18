@@ -146,35 +146,65 @@ sim_output_list %>%
   unite(larval_scenario, simulation_loop, col = "scenario_combn") %>%
   pull(scenario_combn) -> scenario_to_drop
 
-# this is written to work for only one scenario running again
-# would need to rewrite slightly to work for multiple
-scenario_num <- which(names(sim_output_list) %in% scenarios_to_run_again$larval_scenario)
+scenario_num <- match(scenarios_to_run_again$larval_scenario, names(sim_output_list))
 scenario_rep <- scenarios_to_run_again$n_loops
 
 # take input from above and overwrite
 larval_scenarios_input %>%
-  filter(scenario == scenario_num) -> larval_scenarios_input
+  filter(scenario %in% scenario_num) -> larval_scenarios_input
 
 sim_output_list_redo <- vector(mode = "list", length = nrow(larval_scenarios_input))
 names(sim_output_list_redo) <- scenarios_to_run_again$larval_scenario
 
 for (l in 1:length(sim_output_list_redo)) {
   print(c("LOOP = ", l))
-  sim_output_list_redo[[l]] <- do.larval.supply.simulation(k = l, n_sim = scenario_rep)
+  sim_output_list_redo[[l]] <- do.larval.supply.simulation(k = l, n_sim = scenario_rep[l])
 }
 
-bind_rows(bind_rows(sim_output_list_redo, .id = "larval_scenario"),
-          bind_rows(sim_output_list, .id = "larval_scenario")) %>%
+bind_rows(sim_output_list, .id = "larval_scenario") %>%
   unite(larval_scenario, simulation_loop, col = "scenario_combn", remove = FALSE) %>%
   filter(! scenario_combn %in% scenario_to_drop) %>%
-  write_csv("final_larval_maintext_results.csv")
+  select(-scenario_combn) %>%
+  bind_rows(bind_rows(sim_output_list_redo, .id = "larval_scenario")) %>%
+  write_csv("final_larval_maintext_results_001_100.csv")
+
+#### run next 400 runs ####
+
+larval_scenarios_for_full_run %>%
+  rename(mean_supply_level = "supply_level") %>%
+  mutate(variance_supply_level = "low") %>%
+  left_join(larval_supply_full) %>%
+  select(-mean_supply_level, -variance_supply_level) %>%
+  gather(key = variable, value = value, mean_recruit, variance_recruit) %>%
+  unite(temp, species, variable) %>%
+  spread(temp, value) -> larval_scenarios_input # need it to be named this
+
+sim_output_list_400 <- vector(mode = "list", length = 6)
+names(sim_output_list_400) <- c("high", "low", "balanus_high", "chthamalus_high", 
+                            "limpets_high", "pisaster_high")
+
+for (l in 1:length(sim_output_list_400)) {
+  print(c("LOOP = ", l))
+  sim_output_list_400[[l]] <- do.larval.supply.simulation(k = l, n_sim = 400)
+}
+
+sim_output_list_400 %>%
+  bind_rows(.id = "larval_scenario") %>%
+  write_csv("final_larval_maintext_results_101_500.csv")
+
+### pick up here####
+# check for cs too large
+# re run those
+# bind everything together
+
+#### make final df ####
 
 # this is our final dataframe to work from:
-bind_rows(bind_rows(sim_output_list_redo, .id = "larval_scenario"),
-          bind_rows(sim_output_list, .id = "larval_scenario")) %>%
+bind_rows(sim_output_list, .id = "larval_scenario") %>%
   unite(larval_scenario, simulation_loop, col = "scenario_combn", remove = FALSE) %>%
   filter(! scenario_combn %in% scenario_to_drop) %>%
-  select(-scenario_combn) -> sim_output_df
+  select(-scenario_combn) %>%
+  bind_rows(bind_rows(sim_output_list_redo, .id = "larval_scenario")) -> sim_output_df
 
 # get summary stats of interest
 sim_output_df %>%
@@ -183,6 +213,8 @@ sim_output_df %>%
             sd_cs = sd(coexistence_strength),
             n_cs = n()) %>%
   mutate(se_cs = sd_cs/sqrt(n_cs))
+
+
 
 #### plot for main text ####
 
@@ -251,9 +283,9 @@ xlab=c(expression("r"[i]-"r"[r]) ,
        expression(Delta[i]^E),
        expression(Delta[i]^{E*P}))
 
-#sim_output_df %>%
-sim_output_list %>%
-  bind_rows(.id = "larval_scenario") %>%
+sim_output_df %>%
+# sim_output_list %>%
+#   bind_rows(.id = "larval_scenario") %>%
   group_by(larval_scenario, coexistence_partition, species) %>%
   summarise(mean_cs = mean(coexistence_strength),
             sd_cs = sd(coexistence_strength),
