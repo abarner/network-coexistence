@@ -44,12 +44,62 @@ larval_scenarios_for_full_run <- tribble (
   6, "P", "high"
 )
 
+larval_supply_full <- tribble (
+  ~species, ~mean_recruit, ~variance_recruit, ~mean_supply_level, ~variance_supply_level,
+  "B", 90000, sqrt(4.6*10^9), "high", "low",
+  "B", 90000, sqrt(3.24*10^10), "high", "med",
+  "B", 90000, sqrt(4.6*10^10), "high", "high",
+  
+  "B", 50000, sqrt(1.41*10^10), "med", "low",
+  "B", 50000, sqrt(1*10^10), "med", "med",
+  "B", 50000, sqrt(3*10^10), "med", "high",
+  
+  "B", 6000, sqrt(2.025*10^7), "low", "low",
+  "B", 6000, sqrt(1.44*10^8), "low", "med",
+  "B", 6000, sqrt(4.41*10^8), "low", "high",
+  
+  "C", 70000, sqrt(2.75*10^9), "high", "low",
+  "C", 70000, sqrt(1.96*10^10), "high", "med",
+  "C", 70000, sqrt(6*10^10), "high", "high",
+  
+  "C", 30000, sqrt(5.1*10^8), "med", "low",
+  "C", 30000, sqrt(3.6*10^9), "med", "med",
+  "C", 30000, sqrt(1.1*10^10), "med", "high",
+  
+  "C", 6000, sqrt(2.025*10^7), "low", "low",
+  "C", 6000, sqrt(1.44*10^8), "low", "med",
+  "C", 6000, sqrt(4.41*10^8), "low", "high",
+  
+  "L", 3000, sqrt(3.8*10^6), "high", "low", 
+  "L", 3000, sqrt(2.8*10^7), "high", "med", 
+  "L", 3000, sqrt(8.1*10^7), "high", "high", 
+  
+  "L", 2400, sqrt(2.4*10^6), "med", "low",
+  "L", 2400, sqrt(1.7*10^7), "med", "med",
+  "L", 2400, sqrt(5.2*10^7), "med", "high",
+  
+  "L", 200, sqrt(169000), "low", "low",
+  "L", 200, sqrt(1.2*10^5), "low", "med",
+  "L", 200, sqrt(3.6*10^5), "low", "high",
+  
+  "P", 6873, sqrt(3.02*10^7), "high", "low",
+  "P", 6873, sqrt(1.2*10^8), "high", "med",
+  "P", 6873, sqrt(1.4*10^8), "high", "high",
+  
+  "P", 3800, sqrt(9.2*10^6), "med", "low",
+  "P", 3800, sqrt(3.7*10^7), "med", "med",
+  "P", 3800, sqrt(4.2*10^7), "med", "high",
+  
+  "P", 727, sqrt(3.4*10^5), "low", "low",
+  "P", 727, sqrt(1.3*10^6), "low", "med",
+  "P", 727, sqrt(1.5*10^6), "low", "high",
+)
+
 larval_scenarios_for_full_run %>%
-  left_join(larval_supply) %>%
-  # select(-supply_level, -variance_recruit) %>%
-  # mutate(supply_level = "med") %>%
-  # left_join(select(larval_supply, -mean_recruit)) %>%
-  select(-supply_level) %>%
+  rename(mean_supply_level = "supply_level") %>%
+  mutate(variance_supply_level = "low") %>%
+  left_join(larval_supply_full) %>%
+  select(-mean_supply_level, -variance_supply_level) %>%
   gather(key = variable, value = value, mean_recruit, variance_recruit) %>%
   unite(temp, species, variable) %>%
   spread(temp, value) -> larval_scenarios_input # need it to be named this
@@ -60,7 +110,7 @@ names(sim_output_list) <- c("high", "low", "balanus_high", "chthamalus_high",
 
 for (l in 1:length(sim_output_list)) {
   print(c("LOOP = ", l))
-  sim_output_list[[l]] <- do.larval.supply.simulation(k = l, n_sim = 10)
+  sim_output_list[[l]] <- do.larval.supply.simulation(k = l, n_sim = 100)
 }
 
 sim_output_list %>%
@@ -201,7 +251,9 @@ xlab=c(expression("r"[i]-"r"[r]) ,
        expression(Delta[i]^E),
        expression(Delta[i]^{E*P}))
 
-sim_output_df %>%
+#sim_output_df %>%
+sim_output_list %>%
+  bind_rows(.id = "larval_scenario") %>%
   group_by(larval_scenario, coexistence_partition, species) %>%
   summarise(mean_cs = mean(coexistence_strength),
             sd_cs = sd(coexistence_strength),
@@ -252,12 +304,82 @@ sim_output_df %>%
 # results above are for covarying means & sd. in other words, low mean larval supply & low
 # variation in larval supply, vs. high mean larval supply & high variation in larval supply
 
-# do results differ 
+# run test with l-l, l-h, h-h, and h-l
+
+larval_scenarios_for_supply <- tribble (
+  ~scenario, ~species, ~mean_supply_level, ~variance_supply_level,
+  1, "B", "low", "low",
+  1, "C", "low", "low",
+  1, "L", "low", "low",
+  1, "P", "low", "low",
+  2, "B", "low", "high",
+  2, "C", "low", "high",
+  2, "L", "low","high",
+  2, "P", "low","high",
+  3, "B", "high", "high",
+  3, "C", "high", "high",
+  3, "L", "high", "high",
+  3, "P", "high", "high",
+  4, "B", "high", "low",
+  4, "C", "high", "low",
+  4, "L", "high","low",
+  4, "P", "high", "low"
+)
+
+
+larval_scenarios_for_supply %>%
+  left_join(larval_supply_full) %>%
+  select(-mean_supply_level, -variance_supply_level) %>%
+  gather(key = variable, value = value, mean_recruit, variance_recruit) %>%
+  unite(temp, species, variable) %>%
+  spread(temp, value) -> larval_scenarios_input # need it to be named this
+
+sim_output_list_var <- vector(mode = "list", length = 4)
+names(sim_output_list_var) <- c("low-low", "low-high", "high-high", "high-low")
+
+for (l in 1:length(sim_output_list_var)) {
+  print(c("LOOP = ", l))
+  sim_output_list_var[[l]] <- do.larval.supply.simulation(k = l, n_sim = 3)
+}
+
+sim_output_list_var %>%
+  bind_rows(.id = "larval_scenario") %>%
+  write_csv("final_larval_maintext_results_varvar_n3.csv")
 
 
 
-
-
+sim_output_list_var %>%
+  bind_rows(.id = "larval_scenario") %>%
+  group_by(larval_scenario, coexistence_partition, species) %>%
+  summarise(mean_cs = mean(coexistence_strength),
+            sd_cs = sd(coexistence_strength),
+            n_cs = n()) %>%
+  mutate(se_cs = sd_cs/sqrt(n_cs)) %>%
+  ungroup() %>%
+  mutate(species = fct_recode(factor(species),
+                              `Balanus` = "balanus_glandula",
+                              `Chthamalus` = "chthamalus_dalli", 
+                              Limpets = "limpets")) %>%
+  mutate(coexistence_partition = factor(coexistence_partition,
+                                        levels = c(
+                                          "r_bar",
+                                          "delta_0", 
+                                          "delta_p",
+                                          "delta_c",
+                                          "delta_cp"
+                                        ))) %>% 
+  ggplot(aes(x = coexistence_partition, y = mean_cs)) +
+  geom_bar(stat = "identity", aes(fill = coexistence_partition)) + 
+  geom_errorbar(aes(ymin = mean_cs - se_cs, ymax = mean_cs + se_cs), color = "black", width = 0.2) +
+  facet_grid(species ~ larval_scenario, scales = "free") +
+  geom_hline(yintercept = 0) +
+  scale_fill_manual(values=fad) +
+  theme_bw() +
+  theme(legend.position = "none", 
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + 
+  scale_x_discrete(labels=xlab) + 
+  xlab("Mechanistic partitioning") +
+  ylab("Growth rate when rare")
 
 
 

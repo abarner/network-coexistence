@@ -232,11 +232,11 @@ do.intertidal.simulation <- function(
   # 1.46 x 10-9/m2/year, and annual mortality of gametes is 0.999
   
   delta <- -.02 # density dependence for limpets
-  p.whelk.b <- .005 # per capita whelk predation rate on balanus (asymmetry from connell 1961)
-  p.whelk.c <- .001 # per capita whelk predation rate
-  Y <- .001 # whelk conversion rate
+  p.whelk.b <- .01 # per capita whelk predation rate on balanus (asymmetry from connell 1961)
+  p.whelk.c <- .0075 # per capita whelk predation rate
+  Y <- .01 # whelk conversion rate
   p.seastar.b <- .01 # per capita sea star predation rate (asymmetry from navarrete)
-  p.seastar.c <- .007 # per capita sea star predation rate
+  p.seastar.c <- .0075 # per capita sea star predation rate
   # predation rates on balanus & chthamalus are the same
   
   total <- total_1
