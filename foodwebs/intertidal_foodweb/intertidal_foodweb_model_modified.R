@@ -77,7 +77,7 @@ do.population.size.limpets <- function(S, L.prev, S.r, R, delta) {
   # S.r is the survivorship of recruits
   # R is the number of recruits
   # delta is density-dependence 
-  L <- S*L.prev + S.r*R #*exp(delta*L.prev)
+  L <- S*L.prev + S.r*R*exp(delta*L.prev)
   return(L)
 }
 
@@ -103,7 +103,7 @@ do.population.size.whelks <- function(W.prev,
   # S is the survival rate
   # W.feeding is food intake
   
-  W <- W.prev * S + R
+  W <- (W.prev * S) + R
   
   # note that the functional form of this population model is unclear
   # from the manuscript. Alternate model forms could be:
@@ -115,7 +115,7 @@ do.population.size.whelks <- function(W.prev,
 
 do.whelk.recruitment <- function(avg.C, avg.B, p.B, p.C, Y, W.prev, 
                                  B.prev, C.prev, S, 
-                                 r = 1) {
+                                 r = .1) {
   # Updated from F&D to explicitly incorporate density dependence
   # (Which was previously set at a hard limit of 90)
   
@@ -123,11 +123,11 @@ do.whelk.recruitment <- function(avg.C, avg.B, p.B, p.C, Y, W.prev,
   # avg. B is the average number of B. glandula from April through June
   # p is the per capita predation rate
   
-  R <- (avg.C + avg.B)*3*Y*W.prev*S*(p.B*B.prev + p.C*C.prev)
+  R <- (avg.C + avg.B)*3*Y*W.prev*S*((p.B*B.prev) + (p.C*C.prev))
   
   R_logistic <- (R / 90) * exp(r * (1 - (R / 90)))
   
-  return(R_logistic * R)
+  return(R*R_logistic)
 }
 
 do.population.size.seastar <- function(S, P.prev, R, r = 1) {
@@ -233,11 +233,11 @@ do.intertidal.simulation <- function(
   # 1.46 x 10-9/m2/year, and annual mortality of gametes is 0.999
   
   delta <- -.02 # density dependence for limpets
-  p.whelk.b <- .019 # per capita whelk predation rate on balanus (asymmetry from connell 1961)
-  p.whelk.c <- .001 # per capita whelk predation rate on chth.
+  p.whelk.b <- 0.01 # per capita whelk predation rate on balanus (asymmetry from connell 1961)
+  p.whelk.c <- 0.01 # per capita whelk predation rate on chth.
   Y <- .01 # whelk conversion rate
-  p.seastar.b <- .019 # per capita sea star predation rate (asymmetry from navarrete)
-  p.seastar.c <- .001 # per capita sea star predation rate on chth.
+  p.seastar.b <- 0.01 # per capita sea star predation rate (asymmetry from navarrete)
+  p.seastar.c <- 0.01 # per capita sea star predation rate on chth.
   
   total <- total_1
   

@@ -131,11 +131,7 @@ for (l in 1:length(sim_output_list)) {
 
 sim_output_list %>%
   bind_rows(.id = "larval_scenario") %>%
-  filter(coexistence_partition=="r_bar")
-
-sim_output_list %>%
-  bind_rows(.id = "larval_scenario") %>%
-  filter(coexistence_strength < 10 & coexistence_strength > -10) %>%
+  filter(coexistence_strength < 10 & coexistence_strength > -10) %>% 
   group_by(larval_scenario, coexistence_partition, species) %>%
   summarise(mean_cs = mean(coexistence_strength),
             sd_cs = sd(coexistence_strength),
@@ -171,7 +167,19 @@ sim_output_list %>%
         panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + 
   scale_x_discrete(labels=xlab) + 
   xlab("Mechanistic partitioning") +
-  ylab("Growth rate when rare")
+  ylab("Growth rate when rare") 
+
+
+
+
+
+
+
+
+
+
+
+
 
 ### main text run ####
 
@@ -512,6 +520,53 @@ mean(rlnorm(n=500, test_larvae$location.B[1], test_larvae$shape.B[1]))
 mean(rlnorm(n=500, test_larvae$location.B[2], test_larvae$shape.B[2]))
 
 # balanus has order of mag higher recruitment
+
+#### plot abundances/ free space ####
+
+
+n_sim <- 10
+
+test_ab_list <- vector(mode = "list", length = 2)
+names(test_ab_list) <- c("high", "low")
+
+for (k in 1:2) {
+  
+  simulation_loop_output_tmp <- vector(mode = "list", length = n_sim)
+  
+  B.mean_input <- larval_scenarios_input$B_mean_recruit[k]
+  B.stdev_input <- larval_scenarios_input$B_variance_recruit[k]
+  C.mean_input <- larval_scenarios_input$C_mean_recruit[k]
+  C.stdev_input <- larval_scenarios_input$C_variance_recruit[k]
+  L.mean_input <- larval_scenarios_input$L_mean_recruit[k]
+  L.stdev_input <- larval_scenarios_input$L_variance_recruit[k]
+  P.mean_input <- larval_scenarios_input$P_mean_recruit[k]
+  P.stdev_input <- larval_scenarios_input$P_variance_recruit[k]
+  
+  for (i in 1:n_sim) {
+    simulation_loop_output_tmp[[i]] <- do.intertidal.simulation(years_set = 100,
+                                                                B.mean = B.mean_input, B.stdev = B.stdev_input, 
+                                                                C.mean = C.mean_input, C.stdev = C.stdev_input,
+                                                                L.mean = L.mean_input, L.stdev = L.stdev_input, 
+                                                                P.mean = P.mean_input, P.stdev = P.stdev_input)
+  }
+  
+  test_ab_list[[k]] <- simulation_loop_output_tmp
+}
+
+
+lapply(X = test_ab_list$high, FUN = function(x) tail(x$free_space))
+lapply(X = test_ab_list$low, FUN = function(x) tail(x$free_space))
+
+lapply(X = test_ab_list$high, FUN = function(x) tail(x$chthamalus_dalli))
+lapply(X = test_ab_list$high, FUN = function(x) tail(x$balanus_glandula))
+lapply(X = test_ab_list$high, FUN = function(x) tail(x$whelks))
+lapply(X = test_ab_list$high, FUN = function(x) tail(x$limpets))
+lapply(X = test_ab_list$high, FUN = function(x) tail(x$pisaster_ochraceus))
+
+lapply(X = test_ab_list$high, FUN = function(x) tail(x$whelks, n=100))
+
+# FOR SOME REASON< LIMPETS OUT OF CONTROL
+
 
 
 
