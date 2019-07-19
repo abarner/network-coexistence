@@ -113,7 +113,8 @@ do.population.size.whelks <- function(W.prev,
   return(W)
 }
 
-do.whelk.recruitment <- function(avg.C, avg.B, p, Y, W.prev, B.prev, C.prev, S, 
+do.whelk.recruitment <- function(avg.C, avg.B, p.B, p.C, Y, W.prev, 
+                                 B.prev, C.prev, S, 
                                  r = 1) {
   # Updated from F&D to explicitly incorporate density dependence
   # (Which was previously set at a hard limit of 90)
@@ -122,7 +123,7 @@ do.whelk.recruitment <- function(avg.C, avg.B, p, Y, W.prev, B.prev, C.prev, S,
   # avg. B is the average number of B. glandula from April through June
   # p is the per capita predation rate
   
-  R <- (avg.C + avg.B)*3*p*Y*W.prev*S*(B.prev + C.prev)
+  R <- (avg.C + avg.B)*3*Y*W.prev*S*(p.B*B.prev + p.C*C.prev)
   
   R_logistic <- (R / 90) * exp(r * (1 - (R / 90)))
   
@@ -167,14 +168,14 @@ do.intertidal.simulation <- function(
   
   # all means set to "high" recruitment scenarios 
   # (from forde & doak table 1)
-  B.mean = 90000,
-  B.stdev = 67823,
-  C.mean = 70000,
-  C.stdev = 52440,
-  L.mean = 3000,
-  L.stdev = 1949,
-  P.mean = 6873,
-  P.stdev = 5495,
+  B.mean, # = 90000,
+  B.stdev, # = 67823,
+  C.mean, # = 70000,
+  C.stdev, # = 52440,
+  L.mean, # = 3000,
+  L.stdev, # = 1949,
+  P.mean, # = 6873,
+  P.stdev, # = 5495,
   
   var_P = NULL, # if want constant value for pisaster recruitment, set value here
   var_B = NULL, # for balanus recruitment
@@ -206,7 +207,7 @@ do.intertidal.simulation <- function(
   size.recruit.C <- .000003
   size.recruit.L <- .000003
   
-  survival.B <- .75 # asymmetry based on connell 1961
+  survival.B <- .7 # asymmetry based on connell 1961 .75
   survival.C <- .7
   survival.L <- .97
   survival.W <- .94
@@ -222,7 +223,7 @@ do.intertidal.simulation <- function(
   # vs Figures from Menge et al. 2011 JEMBE (50-100 recruits / 100 cm2)
   # so should be about ~ an order of magnitude lower than barnacle settlement?
   
-  survival.recruit.B <- .75 # asymmetry based on connell 1961
+  survival.recruit.B <- .7 # asymmetry based on connell 1961 .75
   survival.recruit.C <- .7
   survival.recruit.L <- .88
   survival.recruit.W <- .88
@@ -232,12 +233,11 @@ do.intertidal.simulation <- function(
   # 1.46 x 10-9/m2/year, and annual mortality of gametes is 0.999
   
   delta <- -.02 # density dependence for limpets
-  p.whelk.b <- .01 # per capita whelk predation rate on balanus (asymmetry from connell 1961)
-  p.whelk.c <- .0075 # per capita whelk predation rate
+  p.whelk.b <- .019 # per capita whelk predation rate on balanus (asymmetry from connell 1961)
+  p.whelk.c <- .001 # per capita whelk predation rate on chth.
   Y <- .01 # whelk conversion rate
-  p.seastar.b <- .01 # per capita sea star predation rate (asymmetry from navarrete)
-  p.seastar.c <- .0075 # per capita sea star predation rate
-  # predation rates on balanus & chthamalus are the same
+  p.seastar.b <- .019 # per capita sea star predation rate (asymmetry from navarrete)
+  p.seastar.c <- .001 # per capita sea star predation rate on chth.
   
   total <- total_1
   
@@ -335,10 +335,10 @@ do.intertidal.simulation <- function(
                          var_P)
     
     
-    B[t] <- do.population.size.barnacles(S=survival.B, p.whelk=p.whelk, W.prev = W[t-1], X.prev=B[t-1],
-                                         S.r = survival.recruit.B, R=B.recruits, p.star=p.seastar, P.prev=P[t-1])
-    C[t] <- do.population.size.barnacles(S=survival.C, p.whelk=p.whelk, W.prev = W[t-1], X.prev=C[t-1],
-                                         S.r = survival.recruit.C, R=C.recruits, p.star=p.seastar, P.prev=P[t-1])
+    B[t] <- do.population.size.barnacles(S=survival.B, p.whelk=p.whelk.b, W.prev = W[t-1], X.prev=B[t-1],
+                                         S.r = survival.recruit.B, R=B.recruits, p.star=p.seastar.b, P.prev=P[t-1])
+    C[t] <- do.population.size.barnacles(S=survival.C, p.whelk=p.whelk.c, W.prev = W[t-1], X.prev=C[t-1],
+                                         S.r = survival.recruit.C, R=C.recruits, p.star=p.seastar.c, P.prev=P[t-1])
     L[t] <- do.population.size.limpets(S=survival.L, L.prev=L[t-1], S.r=survival.recruit.L, R=L.recruits, 
                                        delta=delta)
     
@@ -347,7 +347,9 @@ do.intertidal.simulation <- function(
       W.recruits <- do.whelk.recruitment(avg.C=mean(c(C[t], C[t-1], C[t-2])), 
                                          avg.B=mean(c(B[t], B[t-1], B[t-2])),
                                          S = survival.recruit.W,
-                                         p=p.whelk, Y=Y, W.prev=W[t-1], B.prev=B[t], C.prev=C[t])   
+                                         p.B=p.whelk.b, p.C = p.whelk.c,
+                                         Y=Y, 
+                                         W.prev=W[t-1], B.prev=B[t], C.prev=C[t])   
     } else {
       W.recruits <- 0
     }
