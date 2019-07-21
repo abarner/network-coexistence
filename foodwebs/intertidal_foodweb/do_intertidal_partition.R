@@ -378,17 +378,17 @@ do.intertidal.predator.removal <- function(var_P_input, var_B_input, var_C_input
 
 #### functions to run coexistence partitioning on +/- variation in predator abundance overall and allow variation in larval supply ####
 
-do.intertidal.rbar.with.larval.var <- function(B.mean = B.mean_input, B.stdev = B.stdev_input, 
-                                               C.mean = C.mean_input, C.stdev = C.stdev_input,
-                                               L.mean = L.mean_input, L.stdev = L.stdev_input, 
-                                               P.mean = P.mean_input, P.stdev = P.stdev_input) {
+do.intertidal.rbar.with.larval.var <- function(B.mean_input, B.stdev_input, 
+                                               C.mean_input, C.stdev_input,
+                                               L.mean_input, L.stdev_input, 
+                                               P.mean_input, P.stdev_input) {
   
   # 1. run to eqilibrium
   
   fd_results_1 <- do.intertidal.simulation(years_set = 100,
-                                           B.mean = B.mean_input, B.stdev = B.stdev_input, 
+                                           B.mean = B.mean_input, B.stdev = B.stdev_input,
                                            C.mean = C.mean_input, C.stdev = C.stdev_input,
-                                           L.mean = L.mean_input, L.stdev = L.stdev_input, 
+                                           L.mean = L.mean_input, L.stdev = L.stdev_input,
                                            P.mean = P.mean_input, P.stdev = P.stdev_input)
   
   # 2. low density growth rate calculation
@@ -405,11 +405,11 @@ do.intertidal.rbar.with.larval.var <- function(B.mean = B.mean_input, B.stdev = 
   fd_results_ldr_b_invade <- 
     do.intertidal.simulation(years_set = 50, 
                              B_1 = 1,
-                             C_1 = fd_results_ldr_b_absent$chthamalus_dalli[nrow(fd_results_ldr_b_absent)],
-                             L_1 = fd_results_ldr_b_absent$limpets[nrow(fd_results_ldr_b_absent)],
-                             W_1 = fd_results_ldr_b_absent$whelks[nrow(fd_results_ldr_b_absent)],
-                             P_1 = fd_results_ldr_b_absent$pisaster_ochraceus[nrow(fd_results_ldr_b_absent)],
-                             total_1 = fd_results_ldr_b_absent$free_space[nrow(fd_results_ldr_b_absent)],
+                             C_1 = mean(fd_results_ldr_b_absent$chthamalus_dalli[(nrow(fd_results_ldr_b_absent)-5):nrow(fd_results_ldr_b_absent)]),
+                             L_1 = mean(fd_results_ldr_b_absent$limpets[(nrow(fd_results_ldr_b_absent)-5):nrow(fd_results_ldr_b_absent)]),
+                             W_1 = mean(fd_results_ldr_b_absent$whelks[(nrow(fd_results_ldr_b_absent)-5):nrow(fd_results_ldr_b_absent)]),
+                             P_1 = mean(fd_results_ldr_b_absent$pisaster_ochraceus[(nrow(fd_results_ldr_b_absent)-5):nrow(fd_results_ldr_b_absent)]),
+                             total_1 = mean(fd_results_ldr_b_absent$free_space[(nrow(fd_results_ldr_b_absent)-5):nrow(fd_results_ldr_b_absent)]),
                              B.mean = B.mean_input, B.stdev = B.stdev_input, 
                              C.mean = C.mean_input, C.stdev = C.stdev_input,
                              L.mean = L.mean_input, L.stdev = L.stdev_input, 
@@ -427,12 +427,12 @@ do.intertidal.rbar.with.larval.var <- function(B.mean = B.mean_input, B.stdev = 
                                                       P.mean = P.mean_input, P.stdev = P.stdev_input)
   fd_results_ldr_c_invade <- 
     do.intertidal.simulation(years_set = 50, 
-                             B_1 = fd_results_ldr_c_absent$balanus_glandula[nrow(fd_results_ldr_c_absent)],
+                             B_1 = mean(fd_results_ldr_c_absent$balanus_glandula[(nrow(fd_results_ldr_c_absent)-5):nrow(fd_results_ldr_c_absent)]),
                              C_1 = 1,
-                             L_1 = fd_results_ldr_c_absent$limpets[nrow(fd_results_ldr_c_absent)],
-                             W_1 = fd_results_ldr_c_absent$whelks[nrow(fd_results_ldr_c_absent)],
-                             P_1 = fd_results_ldr_c_absent$pisaster_ochraceus[nrow(fd_results_ldr_c_absent)],
-                             total_1 = fd_results_ldr_c_absent$free_space[nrow(fd_results_ldr_c_absent)],
+                             L_1 = mean(fd_results_ldr_c_absent$limpets[(nrow(fd_results_ldr_c_absent)-5):nrow(fd_results_ldr_c_absent)]),
+                             W_1 = mean(fd_results_ldr_c_absent$whelks[(nrow(fd_results_ldr_c_absent)-5):nrow(fd_results_ldr_c_absent)]),
+                             P_1 = mean(fd_results_ldr_c_absent$pisaster_ochraceus[(nrow(fd_results_ldr_c_absent)-5):nrow(fd_results_ldr_c_absent)]),
+                             total_1 = mean(fd_results_ldr_c_absent$free_space[(nrow(fd_results_ldr_c_absent)-5):nrow(fd_results_ldr_c_absent)]),
                              B.mean = B.mean_input, B.stdev = B.stdev_input, 
                              C.mean = C.mean_input, C.stdev = C.stdev_input,
                              L.mean = L.mean_input, L.stdev = L.stdev_input, 
@@ -450,12 +450,12 @@ do.intertidal.rbar.with.larval.var <- function(B.mean = B.mean_input, B.stdev = 
                                                       P.mean = P.mean_input, P.stdev = P.stdev_input)
   fd_results_ldr_l_invade <- 
     do.intertidal.simulation(years_set = 50, 
-                             B_1 = fd_results_ldr_l_absent$balanus_glandula[nrow(fd_results_ldr_l_absent)],
-                             C_1 = fd_results_ldr_l_absent$chthamalus_dalli[nrow(fd_results_ldr_l_absent)],
+                             B_1 = mean(fd_results_ldr_l_absent$balanus_glandula[(nrow(fd_results_ldr_l_absent)-5):nrow(fd_results_ldr_l_absent)]),
+                             C_1 = mean(fd_results_ldr_l_absent$chthamalus_dalli[(nrow(fd_results_ldr_l_absent)-5):nrow(fd_results_ldr_l_absent)]),
                              L_1 = 1,
-                             W_1 = fd_results_ldr_l_absent$whelks[nrow(fd_results_ldr_l_absent)],
-                             P_1 = fd_results_ldr_l_absent$pisaster_ochraceus[nrow(fd_results_ldr_l_absent)],
-                             total_1 = fd_results_ldr_l_absent$free_space[nrow(fd_results_ldr_l_absent)],
+                             W_1 = mean(fd_results_ldr_l_absent$whelks[(nrow(fd_results_ldr_l_absent)-5):nrow(fd_results_ldr_l_absent)]),
+                             P_1 = mean(fd_results_ldr_l_absent$pisaster_ochraceus[(nrow(fd_results_ldr_l_absent)-5):nrow(fd_results_ldr_l_absent)]),
+                             total_1 = mean(fd_results_ldr_l_absent$free_space[(nrow(fd_results_ldr_l_absent)-5):nrow(fd_results_ldr_l_absent)]),
                              B.mean = B.mean_input, B.stdev = B.stdev_input, 
                              C.mean = C.mean_input, C.stdev = C.stdev_input,
                              L.mean = L.mean_input, L.stdev = L.stdev_input, 
@@ -473,12 +473,12 @@ do.intertidal.rbar.with.larval.var <- function(B.mean = B.mean_input, B.stdev = 
                                                       P.mean = P.mean_input, P.stdev = P.stdev_input)
   fd_results_ldr_w_invade <- 
     do.intertidal.simulation(years_set = 50, 
-                             B_1 = fd_results_ldr_w_absent$balanus_glandula[nrow(fd_results_ldr_w_absent)],
-                             C_1 = fd_results_ldr_w_absent$chthamalus_dalli[nrow(fd_results_ldr_w_absent)],
-                             L_1 = fd_results_ldr_w_absent$limpets[nrow(fd_results_ldr_w_absent)],
+                             B_1 = mean(fd_results_ldr_w_absent$balanus_glandula[(nrow(fd_results_ldr_w_absent)-5):nrow(fd_results_ldr_w_absent)]),
+                             C_1 = mean(fd_results_ldr_w_absent$chthamalus_dalli[(nrow(fd_results_ldr_w_absent)-5):nrow(fd_results_ldr_w_absent)]),
+                             L_1 = mean(fd_results_ldr_w_absent$limpets[(nrow(fd_results_ldr_w_absent)-5):nrow(fd_results_ldr_w_absent)]),
                              W_1 = 1,
-                             P_1 = fd_results_ldr_w_absent$pisaster_ochraceus[nrow(fd_results_ldr_w_absent)],
-                             total_1 = fd_results_ldr_w_absent$free_space[nrow(fd_results_ldr_w_absent)],
+                             P_1 = mean(fd_results_ldr_w_absent$pisaster_ochraceus[(nrow(fd_results_ldr_w_absent)-5):nrow(fd_results_ldr_w_absent)]),
+                             total_1 = mean(fd_results_ldr_w_absent$free_space[(nrow(fd_results_ldr_w_absent)-5):nrow(fd_results_ldr_w_absent)]),
                              B.mean = B.mean_input, B.stdev = B.stdev_input, 
                              C.mean = C.mean_input, C.stdev = C.stdev_input,
                              L.mean = L.mean_input, L.stdev = L.stdev_input, 
@@ -496,12 +496,12 @@ do.intertidal.rbar.with.larval.var <- function(B.mean = B.mean_input, B.stdev = 
                                                       P.mean = P.mean_input, P.stdev = P.stdev_input)
   fd_results_ldr_p_invade <- 
     do.intertidal.simulation(years_set = 50, 
-                             B_1 = fd_results_ldr_p_absent$balanus_glandula[nrow(fd_results_ldr_p_absent)],
-                             C_1 = fd_results_ldr_p_absent$chthamalus_dalli[nrow(fd_results_ldr_p_absent)],
-                             L_1 = fd_results_ldr_p_absent$limpets[nrow(fd_results_ldr_p_absent)],
-                             W_1 = fd_results_ldr_p_absent$whelks[nrow(fd_results_ldr_p_absent)],
+                             B_1 = mean(fd_results_ldr_p_absent$balanus_glandula[(nrow(fd_results_ldr_p_absent)-5):nrow(fd_results_ldr_p_absent)]),
+                             C_1 = mean(fd_results_ldr_p_absent$chthamalus_dalli[(nrow(fd_results_ldr_p_absent)-5):nrow(fd_results_ldr_p_absent)]),
+                             L_1 = mean(fd_results_ldr_p_absent$limpets[(nrow(fd_results_ldr_p_absent)-5):nrow(fd_results_ldr_p_absent)]),
+                             W_1 = mean(fd_results_ldr_p_absent$whelks[(nrow(fd_results_ldr_p_absent)-5):nrow(fd_results_ldr_p_absent)]),
                              P_1 = 1,
-                             total_1 = fd_results_ldr_p_absent$free_space[nrow(fd_results_ldr_p_absent)],
+                             total_1 = mean(fd_results_ldr_p_absent$free_space[(nrow(fd_results_ldr_p_absent)-5):nrow(fd_results_ldr_p_absent)]),
                              B.mean = B.mean_input, B.stdev = B.stdev_input, 
                              C.mean = C.mean_input, C.stdev = C.stdev_input,
                              L.mean = L.mean_input, L.stdev = L.stdev_input, 
@@ -528,13 +528,13 @@ do.intertidal.rbar.with.larval.var <- function(B.mean = B.mean_input, B.stdev = 
               # also return results in case want to look at each
               # results from overall run
               results_1 = fd_results_1,
-              # results from absence/invasion of each species
+              ## results from absence/invasion of each species
               results_2_b_invade = bind_rows(fd_results_ldr_b_absent, fd_results_ldr_b_invade),
               results_2_c_invade = bind_rows(fd_results_ldr_c_absent, fd_results_ldr_c_invade),
               results_2_l_invade = bind_rows(fd_results_ldr_l_absent, fd_results_ldr_l_invade),
               results_2_p_invade = bind_rows(fd_results_ldr_p_absent, fd_results_ldr_p_invade),
               results_2_w_invade = bind_rows(fd_results_ldr_w_absent, fd_results_ldr_w_invade)
-              
+
   )
   )
 }
@@ -546,7 +546,18 @@ do.intertidal.predator.removal.with.larval.var <- function(var_P_input, var_B_in
                                                            B.mean_input, B.stdev_input, C.mean_input, C.stdev_input,
                                                            L.mean_input, L.stdev_input, P.mean_input, P.stdev_input) {
   
-  # low density growth rate calculation
+  # 1. run to eqilibrium
+  
+  fd_results_1 <- do.intertidal.simulation(years_set = 100,
+                                           var_P = var_P_input, var_B = var_B_input, 
+                                           var_C = var_C_input, var_L = var_L_input,
+                                           P_avg = P_avg_input, W_avg = W_avg_input,
+                                           B.mean = B.mean_input, B.stdev = B.stdev_input,
+                                           C.mean = C.mean_input, C.stdev = C.stdev_input,
+                                           L.mean = L.mean_input, L.stdev = L.stdev_input,
+                                           P.mean = P.mean_input, P.stdev = P.stdev_input)
+  
+  # 2. low density growth rate calculation
   
   # balanus
   # run without balanus adults or recruits -> equilibrium
@@ -562,11 +573,11 @@ do.intertidal.predator.removal.with.larval.var <- function(var_P_input, var_B_in
   fd_results_ldr_b_invade <- 
     do.intertidal.simulation(years_set = 50, 
                              B_1 = 1,
-                             C_1 = fd_results_ldr_b_absent$chthamalus_dalli[nrow(fd_results_ldr_b_absent)],
-                             L_1 = fd_results_ldr_b_absent$limpets[nrow(fd_results_ldr_b_absent)],
-                             W_1 = fd_results_ldr_b_absent$whelks[nrow(fd_results_ldr_b_absent)],
-                             P_1 = fd_results_ldr_b_absent$pisaster_ochraceus[nrow(fd_results_ldr_b_absent)],
-                             total_1 = fd_results_ldr_b_absent$free_space[nrow(fd_results_ldr_b_absent)],
+                             C_1 = mean(fd_results_ldr_b_absent$chthamalus_dalli[(nrow(fd_results_ldr_b_absent)-5):nrow(fd_results_ldr_b_absent)]),
+                             L_1 = mean(fd_results_ldr_b_absent$limpets[(nrow(fd_results_ldr_b_absent)-5):nrow(fd_results_ldr_b_absent)]),
+                             W_1 = mean(fd_results_ldr_b_absent$whelks[(nrow(fd_results_ldr_b_absent)-5):nrow(fd_results_ldr_b_absent)]),
+                             P_1 = mean(fd_results_ldr_b_absent$pisaster_ochraceus[(nrow(fd_results_ldr_b_absent)-5):nrow(fd_results_ldr_b_absent)]),
+                             total_1 = mean(fd_results_ldr_b_absent$free_space[(nrow(fd_results_ldr_b_absent)-5):nrow(fd_results_ldr_b_absent)]),
                              var_P = var_P_input, var_B = var_B_input, var_C = var_C_input, var_L = var_L_input,
                              P_avg = P_avg_input, W_avg = W_avg_input,
                              B.mean = B.mean_input, B.stdev = B.stdev_input, 
@@ -588,12 +599,12 @@ do.intertidal.predator.removal.with.larval.var <- function(var_P_input, var_B_in
                                                       P.mean = P.mean_input, P.stdev = P.stdev_input)
   fd_results_ldr_c_invade <- 
     do.intertidal.simulation(years_set = 50, 
-                             B_1 = fd_results_ldr_c_absent$balanus_glandula[nrow(fd_results_ldr_c_absent)],
+                             B_1 = mean(fd_results_ldr_c_absent$balanus_glandula[(nrow(fd_results_ldr_c_absent)-5):nrow(fd_results_ldr_c_absent)]),
                              C_1 = 1,
-                             L_1 = fd_results_ldr_c_absent$limpets[nrow(fd_results_ldr_c_absent)],
-                             W_1 = fd_results_ldr_c_absent$whelks[nrow(fd_results_ldr_c_absent)],
-                             P_1 = fd_results_ldr_c_absent$pisaster_ochraceus[nrow(fd_results_ldr_c_absent)],
-                             total_1 = fd_results_ldr_c_absent$free_space[nrow(fd_results_ldr_c_absent)],
+                             L_1 = mean(fd_results_ldr_c_absent$limpets[(nrow(fd_results_ldr_c_absent)-5):nrow(fd_results_ldr_c_absent)]),
+                             W_1 = mean(fd_results_ldr_c_absent$whelks[(nrow(fd_results_ldr_c_absent)-5):nrow(fd_results_ldr_c_absent)]),
+                             P_1 = mean(fd_results_ldr_c_absent$pisaster_ochraceus[(nrow(fd_results_ldr_c_absent)-5):nrow(fd_results_ldr_c_absent)]),
+                             total_1 = mean(fd_results_ldr_c_absent$free_space[(nrow(fd_results_ldr_c_absent)-5):nrow(fd_results_ldr_c_absent)]),
                              var_P = var_P_input, var_B = var_B_input, var_C = var_C_input, var_L = var_L_input,
                              P_avg = P_avg_input, W_avg = W_avg_input,
                              B.mean = B.mean_input, B.stdev = B.stdev_input, 
@@ -615,12 +626,12 @@ do.intertidal.predator.removal.with.larval.var <- function(var_P_input, var_B_in
                                                       P.mean = P.mean_input, P.stdev = P.stdev_input)
   fd_results_ldr_l_invade <- 
     do.intertidal.simulation(years_set = 50, 
-                             B_1 = fd_results_ldr_l_absent$balanus_glandula[nrow(fd_results_ldr_l_absent)],
-                             C_1 = fd_results_ldr_l_absent$chthamalus_dalli[nrow(fd_results_ldr_l_absent)],
+                             B_1 = mean(fd_results_ldr_l_absent$balanus_glandula[(nrow(fd_results_ldr_l_absent)-5):nrow(fd_results_ldr_l_absent)]),
+                             C_1 = mean(fd_results_ldr_l_absent$chthamalus_dalli[(nrow(fd_results_ldr_l_absent)-5):nrow(fd_results_ldr_l_absent)]),
                              L_1 = 1,
-                             W_1 = fd_results_ldr_l_absent$whelks[nrow(fd_results_ldr_l_absent)],
-                             P_1 = fd_results_ldr_l_absent$pisaster_ochraceus[nrow(fd_results_ldr_l_absent)],
-                             total_1 = fd_results_ldr_l_absent$free_space[nrow(fd_results_ldr_l_absent)],
+                             W_1 = mean(fd_results_ldr_l_absent$whelks[(nrow(fd_results_ldr_l_absent)-5):nrow(fd_results_ldr_l_absent)]),
+                             P_1 = mean(fd_results_ldr_l_absent$pisaster_ochraceus[(nrow(fd_results_ldr_l_absent)-5):nrow(fd_results_ldr_l_absent)]),
+                             total_1 = mean(fd_results_ldr_l_absent$free_space[(nrow(fd_results_ldr_l_absent)-5):nrow(fd_results_ldr_l_absent)]),
                              var_P = var_P_input, var_B = var_B_input, var_C = var_C_input, var_L = var_L_input,
                              P_avg = P_avg_input, W_avg = W_avg_input,
                              B.mean = B.mean_input, B.stdev = B.stdev_input, 
@@ -642,12 +653,12 @@ do.intertidal.predator.removal.with.larval.var <- function(var_P_input, var_B_in
                                                       P.mean = P.mean_input, P.stdev = P.stdev_input)
   fd_results_ldr_w_invade <- 
     do.intertidal.simulation(years_set = 50, 
-                             B_1 = fd_results_ldr_w_absent$balanus_glandula[nrow(fd_results_ldr_w_absent)],
-                             C_1 = fd_results_ldr_w_absent$chthamalus_dalli[nrow(fd_results_ldr_w_absent)],
-                             L_1 = fd_results_ldr_w_absent$limpets[nrow(fd_results_ldr_w_absent)],
+                             B_1 = mean(fd_results_ldr_w_absent$balanus_glandula[(nrow(fd_results_ldr_w_absent)-5):nrow(fd_results_ldr_w_absent)]),
+                             C_1 = mean(fd_results_ldr_w_absent$chthamalus_dalli[(nrow(fd_results_ldr_w_absent)-5):nrow(fd_results_ldr_w_absent)]),
+                             L_1 = mean(fd_results_ldr_w_absent$limpets[(nrow(fd_results_ldr_w_absent)-5):nrow(fd_results_ldr_w_absent)]),
                              W_1 = 1,
-                             P_1 = fd_results_ldr_w_absent$pisaster_ochraceus[nrow(fd_results_ldr_w_absent)],
-                             total_1 = fd_results_ldr_w_absent$free_space[nrow(fd_results_ldr_w_absent)],
+                             P_1 = mean(fd_results_ldr_w_absent$pisaster_ochraceus[(nrow(fd_results_ldr_w_absent)-5):nrow(fd_results_ldr_w_absent)]),
+                             total_1 = mean(fd_results_ldr_w_absent$free_space[(nrow(fd_results_ldr_w_absent)-5):nrow(fd_results_ldr_w_absent)]),
                              var_P = var_P_input, var_B = var_B_input, var_C = var_C_input, var_L = var_L_input,
                              P_avg = P_avg_input, W_avg = W_avg_input,
                              B.mean = B.mean_input, B.stdev = B.stdev_input, 
@@ -669,12 +680,12 @@ do.intertidal.predator.removal.with.larval.var <- function(var_P_input, var_B_in
                                                       P.mean = P.mean_input, P.stdev = P.stdev_input)
   fd_results_ldr_p_invade <- 
     do.intertidal.simulation(years_set = 50, 
-                             B_1 = fd_results_ldr_p_absent$balanus_glandula[nrow(fd_results_ldr_p_absent)],
-                             C_1 = fd_results_ldr_p_absent$chthamalus_dalli[nrow(fd_results_ldr_p_absent)],
-                             L_1 = fd_results_ldr_p_absent$limpets[nrow(fd_results_ldr_p_absent)],
-                             W_1 = fd_results_ldr_p_absent$whelks[nrow(fd_results_ldr_p_absent)],
+                             B_1 = mean(fd_results_ldr_p_absent$balanus_glandula[(nrow(fd_results_ldr_p_absent)-5):nrow(fd_results_ldr_p_absent)]),
+                             C_1 = mean(fd_results_ldr_p_absent$chthamalus_dalli[(nrow(fd_results_ldr_p_absent)-5):nrow(fd_results_ldr_p_absent)]),
+                             L_1 = mean(fd_results_ldr_p_absent$limpets[(nrow(fd_results_ldr_p_absent)-5):nrow(fd_results_ldr_p_absent)]),
+                             W_1 = mean(fd_results_ldr_p_absent$whelks[(nrow(fd_results_ldr_p_absent)-5):nrow(fd_results_ldr_p_absent)]),
                              P_1 = 1,
-                             total_1 = fd_results_ldr_p_absent$free_space[nrow(fd_results_ldr_p_absent)],
+                             total_1 = mean(fd_results_ldr_p_absent$free_space[(nrow(fd_results_ldr_p_absent)-5):nrow(fd_results_ldr_p_absent)]),
                              var_P = var_P_input, var_B = var_B_input, var_C = var_C_input, var_L = var_L_input,
                              P_avg = P_avg_input, W_avg = W_avg_input,
                              B.mean = B.mean_input, B.stdev = B.stdev_input, 
@@ -720,7 +731,7 @@ do.intertidal.predator.removal.with.larval.var <- function(var_P_input, var_B_in
 #### function to run simulations across larval supply rates ####
 
 
-do.larval.supply.simulation <- function(k = 1, # indexing number for which larval scenario to use
+do.larval.supply.simulation <- function(k, # indexing number for which larval scenario to use
                                         n_sim = 50) {
   
   simulation_loop_output_tmp <- vector(mode = "list", length = n_sim)
@@ -739,10 +750,10 @@ do.larval.supply.simulation <- function(k = 1, # indexing number for which larva
     P.stdev_input <- larval_scenarios_input$P_variance_recruit[k]
     
     # run model to equilibrium, get low density growth rates for invader/resident combinations
-    fd_tmp_1 <- do.intertidal.rbar.with.larval.var(B.mean = B.mean_input, B.stdev = B.stdev_input, 
-                                                   C.mean = C.mean_input, C.stdev = C.stdev_input,
-                                                   L.mean = L.mean_input, L.stdev = L.stdev_input, 
-                                                   P.mean = P.mean_input, P.stdev = P.stdev_input)
+    fd_tmp_1 <- do.intertidal.rbar.with.larval.var(B.mean_input = B.mean_input, B.stdev_input = B.stdev_input, 
+                                                   C.mean_input = C.mean_input, C.stdev_input = C.stdev_input,
+                                                   L.mean_input = L.mean_input, L.stdev_input = L.stdev_input, 
+                                                   P.mean_input = P.mean_input, P.stdev_input = P.stdev_input)
     
     # get long term averages:
     fd_tmp_1_var_C <- mean(fd_tmp_1$results_1$larvae.C)

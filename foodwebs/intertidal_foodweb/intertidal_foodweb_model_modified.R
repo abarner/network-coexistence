@@ -115,7 +115,7 @@ do.population.size.whelks <- function(W.prev,
 
 do.whelk.recruitment <- function(avg.C, avg.B, p.B, p.C, Y, W.prev, 
                                  B.prev, C.prev, S, 
-                                 r = .1) {
+                                 r = .3) {
   # Updated from F&D to explicitly incorporate density dependence
   # (Which was previously set at a hard limit of 90)
   
@@ -130,7 +130,7 @@ do.whelk.recruitment <- function(avg.C, avg.B, p.B, p.C, Y, W.prev,
   return(R*R_logistic)
 }
 
-do.population.size.seastar <- function(S, P.prev, R, r = 1) {
+do.population.size.seastar <- function(S, P.prev, R, survival.recruit.P, r = 1) {
   # Updated from F&D to explicitly incorporate density dependence
   # (Which was previously set at a hard limit of 6)
   
@@ -162,6 +162,11 @@ do.intertidal.simulation <- function(
   
   years_set = 50, # number of years to run simulation
   
+  # in connolly & roughgarden 1999, table 1, settlement is 0.02/hour/m2 for barn
+  # estimates for limpet settlement is set to same as to barnacle settlement
+  # don't have an estimate otherwise
+  # use Fig 5a in Gilman 2006 Ecography (5-10 recruits max / 625 cm2)
+  # vs Figures from Menge et al. 2011 JEMBE (50-100 recruits / 100 cm2)
   settlement.B = .002 * 30 * 24,
   settlement.C = .002 * 30 * 24,
   settlement.L = .002 * 30 * 24,
@@ -186,7 +191,7 @@ do.intertidal.simulation <- function(
   W_avg = NULL,
   
   B_1 = 4100, # defaults to starting conditions given by forde & doak
-  C_1 = 11000,
+  C_1 = 4100, # default was = 11000, but set to same as balanus
   L_1 = 239,
   #L_1 = 400, # after gilman 2006
   W_1 = 93,
@@ -201,7 +206,7 @@ do.intertidal.simulation <- function(
   size.B <- .000098
   size.C <- .000032
   size.L <- .00008
-  #size.L <- .0001 # after gilman 2006 ecography
+  # size.L <- .0001 # after gilman 2006 ecography
   
   size.recruit.B <- .000003
   size.recruit.C <- .000003
@@ -213,17 +218,8 @@ do.intertidal.simulation <- function(
   survival.W <- .94
   survival.P <- .992
   
-  # in connolly & roughgarden 1999, table 1, settlement is 0.02/hour/m2 for barn
-    # settlement.B <- .002 * 30 * 24
-    # settlement.C <- .002 * 30 * 24
-    # settlement.L <- .0002 * 30 * 24
-  # estimates for limpet settlement is relative to barnacle settlement
-  # don't have an estimate otherwise
-  # use Fig 5a in Gilman 2006 Ecography (5-10 recruits max / 625 cm2)
-  # vs Figures from Menge et al. 2011 JEMBE (50-100 recruits / 100 cm2)
-  # so should be about ~ an order of magnitude lower than barnacle settlement?
-  
-  survival.recruit.B <- .7 # asymmetry based on connell 1961 .75
+  # connell 1961 suggests that survival of balanus > chthamalus
+  survival.recruit.B <- .7
   survival.recruit.C <- .7
   survival.recruit.L <- .88
   survival.recruit.W <- .88
@@ -233,11 +229,13 @@ do.intertidal.simulation <- function(
   # 1.46 x 10-9/m2/year, and annual mortality of gametes is 0.999
   
   delta <- -.02 # density dependence for limpets
-  p.whelk.b <- 0.01 # per capita whelk predation rate on balanus (asymmetry from connell 1961)
-  p.whelk.c <- 0.01 # per capita whelk predation rate on chth.
   Y <- .01 # whelk conversion rate
-  p.seastar.b <- 0.01 # per capita sea star predation rate (asymmetry from navarrete)
-  p.seastar.c <- 0.01 # per capita sea star predation rate on chth.
+  # connell 1961 suggests that whelk predation rate on balanus > chthamalus
+  p.whelk.b <- 0.02 # per capita whelk predation rate on balanus 
+  p.whelk.c <- 0.02 # per capita whelk predation rate on chth.
+  # navarrete (year?) suggests sea star predation rate on balanus > chthamalus
+  p.seastar.b <- 0.02 # per capita sea star predation rate
+  p.seastar.c <- 0.02 # per capita sea star predation rate on chth.
   
   total <- total_1
   
@@ -364,7 +362,9 @@ do.intertidal.simulation <- function(
     }
     
     if (is.null(P_avg)) {
-      P[t] <- do.population.size.seastar(S=survival.P, P.prev=P[t-1], R=P.recruits)
+      P[t] <- do.population.size.seastar(S=survival.P, P.prev=P[t-1], 
+                                         survival.recruit.P = survival.recruit.P,
+                                         R=P.recruits)
     } else {
       P[t] <- P_avg
     }
