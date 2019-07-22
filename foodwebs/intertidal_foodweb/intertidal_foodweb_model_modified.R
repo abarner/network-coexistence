@@ -54,10 +54,14 @@ do.population.size.barnacles <- function(S, p.whelk, W.prev, X.prev, S.r, R, p.s
   
   # rewritten from previous form to make more intuitive sense
   X_before_predation <- S*X.prev
-  if (X_before_predation < 0) {
-    X_before_predation <- 0
-  } else {
-    X <- X_before_predation + S.r*R - p.whelk*W.prev*X_before_predation - p.star*P.prev*X_before_predation
+  
+  if (X_before_predation < 0) { X_before_predation <- 0 } 
+  
+  X <- X_before_predation + S.r*R - p.whelk*W.prev*X_before_predation - p.star*P.prev*X_before_predation
+  
+  # for some reason, X might return as NA - add in function to see when
+  if (is.na(X)) {
+    print(c(X_before_predation, X.prev, R, W.prev, P.prev))
   }
   
   if (X < 0) {

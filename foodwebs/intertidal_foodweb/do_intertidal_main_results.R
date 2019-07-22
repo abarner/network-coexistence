@@ -111,18 +111,30 @@ larval_scenarios_for_full_run %>%
 
 ### main text run ####
 
-sim_output_list <- vector(mode = "list", length = 6)
-names(sim_output_list) <- c("high", "low", "balanus_high", "chthamalus_high",
-                            "limpets_high", "pisaster_high")
+# do in batches so nothing lost if there's a failure
+csv_names <- c("001_100", "101_200", "201_300",
+               "301_400", "401_500")
 
-for (k in 1:length(sim_output_list)) {
-  print(c("LOOP = ", k))
-  sim_output_list[[k]] <- do.larval.supply.simulation(k = k, n_sim = 1)
+for (i in 1:5) {
+  print(paste0("i = ", i))
+  sim_output_list <- vector(mode = "list", length = 6)
+  names(sim_output_list) <- c("high", "low", "balanus_high", "chthamalus_high",
+                              "limpets_high", "pisaster_high")
+  
+  for (k in 1:length(sim_output_list)) {
+    print(paste0("k = ", k))
+    sim_output_list[[k]] <- do.larval.supply.simulation(k = k, n_sim = 100)
+  }
+  
+  sim_output_list %>%
+    bind_rows(.id = "larval_scenario") %>%
+    write_csv(path = paste0("final_larval_maintext_results_", csv_names[i], ".csv"))
 }
 
-sim_output_list %>%
-  bind_rows(.id = "larval_scenario") %>%
-  write_csv("final_larval_maintext_results.csv")
+#### read in output ####
+
+# list files, read csv etc.
+read_csv()
 
 sim_output_list %>%
   bind_rows(.id = "larval_scenario") %>%
