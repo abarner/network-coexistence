@@ -2,3 +2,7 @@
 *.png
 intertidal_notebook.Rmd
 intertidal_notebook.nb.html
+testrun_results_delta02_n10.csv
+testrun_results_delta002.csv
+testrun_results_fixedvar_n3.csv
+testrun_results_varvar_n3.csv
