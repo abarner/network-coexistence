@@ -16,6 +16,15 @@ do.free.space.calculation <- function(total, B, size.B, C, size.C, L, size.L) {
   # L is population size of limpets
   # size.L = average size of an adult limpet
   free <- total - (B*size.B + C*size.C + L*size.L)
+  
+  if (free < 0) {
+    free <- 0
+  } 
+  
+  if (free > 1) {
+    free <- 1
+  }
+  
   return(free)
 }
 
@@ -58,12 +67,7 @@ do.population.size.barnacles <- function(S, p.whelk, W.prev, X.prev, S.r, R, p.s
   if (X_before_predation < 0) { X_before_predation <- 0 } 
   
   X <- X_before_predation + S.r*R - p.whelk*W.prev*X_before_predation - p.star*P.prev*X_before_predation
-  
-  # for some reason, X might return as NA - add in function to see when
-  if (is.na(X)) {
-    print(c(X_before_predation, X.prev, R, W.prev, P.prev))
-  }
-  
+
   if (X < 0) {
     X <- 0
     return(X)
@@ -76,7 +80,7 @@ do.population.size.barnacles <- function(S, p.whelk, W.prev, X.prev, S.r, R, p.s
 do.population.size.limpets <- function(S, L.prev, S.r, R, delta) {
   # Same as F&D model
   
-  # S is survivorship
+  # S is survivorship of adults
   # L.prev is the limpet population size in the previous month
   # S.r is the survivorship of recruits
   # R is the number of recruits
@@ -384,6 +388,16 @@ do.intertidal.simulation <- function(
     
     free[t] <- do.free.space.calculation(total=total, B=B[t], size.B=size.B, C=C[t], 
                                       size.C=size.C, L=L[t], size.L=size.L)
+    
+    if (is.infinite(free[t]) | is.na(free[t])) {
+      g <- ifelse(t > 11, t - 10, 1)
+      print(c(B[g:t]))
+      print(c(C[g:t]))
+      print(c(L[g:t]))
+      print(c(W[g:t]))
+      print(c(P[g:t]))
+      print(c(free[g:t]))
+    }
     
     # track all results
     results$timesteps[t] <- t

@@ -133,7 +133,10 @@ for (i in 1:5) {
 
 #### read in output ####
 
-# list files, read csv etc.
+output_files <- list.files(path = "foodwebs/intertidal_foodweb/", 
+                           pattern = "final_larval_maintext_results_", 
+                           full.names = TRUE)
+
 read_csv()
 
 sim_output_list %>%
