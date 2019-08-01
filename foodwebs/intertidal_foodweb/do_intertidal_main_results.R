@@ -442,6 +442,10 @@ bind_rows(test_ab_list_high, test_ab_list_low) %>%
   labs(x = "Time (months)", y = "Abundance")
 dev.off()  
 
+# store the data from the two runs
+bind_rows(test_ab_list_high, test_ab_list_low) %>%
+  write_csv("timeseries_final100_2larvalsupply.csv")
+
 
 
 
