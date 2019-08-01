@@ -377,3 +377,75 @@ sim_output_df %>%
   xlab("Mechanistic partitioning") +
   ylab("Growth rate when rare")
 dev.off()
+
+
+#### run & plot time series for supplement ####
+
+# use the high & low scenarios from above
+
+n_sim <- 500
+
+test_ab_list <- vector(mode = "list", length = 2)
+names(test_ab_list) <- c("high", "low")
+
+for (k in 1:2) {
+  
+  simulation_loop_output_tmp <- vector(mode = "list", length = n_sim)
+  
+  B.mean_input <- larval_scenarios_input$B_mean_recruit[k]
+  B.stdev_input <- larval_scenarios_input$B_variance_recruit[k]
+  C.mean_input <- larval_scenarios_input$C_mean_recruit[k]
+  C.stdev_input <- larval_scenarios_input$C_variance_recruit[k]
+  L.mean_input <- larval_scenarios_input$L_mean_recruit[k]
+  L.stdev_input <- larval_scenarios_input$L_variance_recruit[k]
+  P.mean_input <- larval_scenarios_input$P_mean_recruit[k]
+  P.stdev_input <- larval_scenarios_input$P_variance_recruit[k]
+  
+  for (i in 1:n_sim) {
+    print(i)
+    simulation_loop_output_tmp[[i]] <- do.intertidal.simulation(years_set = 100,
+                                                                B.mean = B.mean_input, B.stdev = B.stdev_input, 
+                                                                C.mean = C.mean_input, C.stdev = C.stdev_input,
+                                                                L.mean = L.mean_input, L.stdev = L.stdev_input, 
+                                                                P.mean = P.mean_input, P.stdev = P.stdev_input)
+  }
+  
+  test_ab_list[[k]] <- simulation_loop_output_tmp
+}
+
+test_ab_list$high %>%
+  map(top_n, n = 100, wt = time) %>%
+  bind_rows(.id = "rep") %>%
+  mutate(larval_supply = "High") -> test_ab_list_high
+test_ab_list$low %>%
+  map(top_n, n = 100, wt = time) %>%
+  bind_rows(.id = "rep") %>%
+  mutate(larval_supply = "Low") -> test_ab_list_low
+
+png(filename = "intertidal_timeseries.png", width = 6, height = 8, units = "in", res = 300)
+bind_rows(test_ab_list_high, test_ab_list_low) %>%
+  gather(balanus_glandula:pisaster_ochraceus, key = "species", value = "abundance") %>%
+  mutate(species = fct_recode(factor(species),
+                              `Balanus glandula` = "balanus_glandula",
+                              `Chthamalus dalli` = "chthamalus_dalli", 
+                              Limpets = "limpets",
+                              `Pisaster ochraceus` = "pisaster_ochraceus",
+                              Whelks = "whelks")) %>%
+  ggplot(aes(x = time, y = abundance)) +
+  #geom_point(size = 2) +
+  geom_line(aes(group = rep), alpha = 0.25) +
+  facet_grid(species ~ larval_supply, scales = "free") +
+  theme_bw() +
+  theme(legend.position = "none", 
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank()) +
+  labs(x = "Time (months)", y = "Abundance")
+dev.off()  
+
+
+
+
+
+
+
+
