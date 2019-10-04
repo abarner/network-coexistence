@@ -330,24 +330,7 @@ xlab=c(expression("r"[i]-"r"[r]) ,
        expression(Delta[i]^E),
        expression(Delta[i]^{E*P}))
 
-
-sim_output_df %>%
-  filter(larval_scenario %in% c("low", "high")) %>%
-  group_by(larval_scenario, coexistence_partition, species) %>%
-  summarise(mean_cs = mean(coexistence_strength),
-            sd_cs = sd(coexistence_strength),
-            n_cs = n()) %>%
-  mutate(se_cs = sd_cs/sqrt(n_cs)) %>%
-  ungroup() %>%
-  rowwise() %>%
-  mutate(mean_max = mean_cs + se_cs,
-         mean_min = mean_cs - se_cs) %>%
-  ungroup() %>%
-  group_by(larval_scenario) %>%
-  summarise(max_by = max(mean_max),
-            min_by = min(mean_min)) %>%
-  gather(max_by, min_by, key = key, value = mean_cs) %>%
-  select(-key) %>%
+tibble(larval_scenario = rep(c("low", "high"), times = 2)) %>%
   mutate(coexistence_partition = "r_bar") %>%
   mutate(coexistence_partition = factor(coexistence_partition,
                                         levels = c(
@@ -364,8 +347,7 @@ sim_output_df %>%
                                       `All low` = "low",
                                       `All high` = "high")) %>%
   # add a little space for labels
-  mutate(mean_cs = ifelse(mean_cs == max(mean_cs), 
-                          mean_cs + 0.6, mean_cs)) -> range_supply
+  mutate(coexistence_strength = rep(5)) -> range_supply
 # panel labels
 tibble(species = c("balanus_glandula", "balanus_glandula", 
                    "chthamalus_dalli", "chthamalus_dalli", 
@@ -387,7 +369,7 @@ tibble(species = c("balanus_glandula", "balanus_glandula",
                                              )),
                                       `All low` = "low",
                                       `All high` = "high")) %>%
-  mutate(mean_cs = max(range_supply$mean_cs)) %>%
+  mutate(mean_cs = max(range_supply$coexistence_strength)) %>%
   mutate(species = fct_recode(factor(species),
                               `Balanus glandula` = "balanus_glandula",
                               `Chthamalus dalli` = "chthamalus_dalli",
@@ -397,63 +379,9 @@ tibble(species = c("balanus_glandula", "balanus_glandula",
 sim_output_df %>%
   filter(larval_scenario %in% c("low", "high")) %>%
   filter(species == "balanus_glandula") %>%
-  group_by(larval_scenario, coexistence_partition, species) %>%
-  summarise(mean_cs = mean(coexistence_strength),
-            sd_cs = sd(coexistence_strength),
-            n_cs = n()) %>%
-  mutate(se_cs = sd_cs/sqrt(n_cs)) %>%
-  ungroup() %>%
   mutate(species = fct_recode(factor(species),
-                              `Balanus glandula` = "balanus_glandula")) %>%
-  mutate(larval_scenario = fct_recode(factor(larval_scenario,
-                                             levels = c(
-                                               "low", "high"
-                                             )),
-                                      `All low` = "low",
-                                      `All high` = "high")) %>%
-  mutate(coexistence_partition = factor(coexistence_partition,
-                                        levels = c(
-                                          "r_bar",
-                                          "delta_0", 
-                                          "delta_p",
-                                          "delta_c",
-                                          "delta_cp"
-                                        ))) %>% 
-  ggplot(aes(x = coexistence_partition, y = mean_cs)) +
-  geom_bar(stat = "identity", aes(fill = coexistence_partition), size = .25, color = "black") + 
-  #geom_errorbar(aes(ymin = mean_cs - se_cs, ymax = mean_cs + se_cs), color = "black", width = 0.2) +
-  geom_errorbar(aes(ymin = mean_cs - sd_cs, ymax = mean_cs + sd_cs), color = "black", width = 0.2) +
-  # geom_point(data = range_supply, aes(x = coexistence_partition,
-  #                                     y = mean_cs+0.1), color = "white", size = 0) +
-  facet_grid(larval_scenario ~ species) +
-  geom_hline(yintercept = 0) +
-  scale_fill_manual(values=fad) +
-  geom_text(data = filter(label_supply, species == "Balanus glandula"), 
-            aes(x = coexistence_partition, y = 10, 
-                label = panel_label),
-            position = position_nudge(x = -0.25, y = 0.5))+
-  theme_bw() +
-  theme(legend.position = "none", 
-        panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        strip.text.y = element_blank(),
-        strip.text.x = element_text(face = "italic", size = 14),
-        axis.text = element_text(size = 14),
-        axis.title = element_text(size = 14)) + 
-  scale_x_discrete(labels=xlab) + 
-  xlab("") +
-  ylab("Growth rate when rare") -> a
-
-# middle panel (c dalli)
-sim_output_df %>%
-  filter(larval_scenario %in% c("low", "high")) %>%
-  filter(species == "chthamalus_dalli") %>%
-  group_by(larval_scenario, coexistence_partition, species) %>%
-  summarise(mean_cs = mean(coexistence_strength),
-            sd_cs = sd(coexistence_strength),
-            n_cs = n()) %>%
-  mutate(se_cs = sd_cs/sqrt(n_cs)) %>%
-  ungroup() %>%
-  mutate(species = fct_recode(factor(species),
+                              `Limpets` = "limpets",
+                              `Balanus glandula` = "balanus_glandula",
                               `Chthamalus dalli` = "chthamalus_dalli")) %>%
   mutate(larval_scenario = fct_recode(factor(larval_scenario,
                                              levels = c(
@@ -469,12 +397,54 @@ sim_output_df %>%
                                           "delta_c",
                                           "delta_cp"
                                         ))) %>% 
-  ggplot(aes(x = coexistence_partition, y = mean_cs)) +
-  geom_bar(stat = "identity", aes(fill = coexistence_partition), size = .25, color = "black") + 
-  #geom_errorbar(aes(ymin = mean_cs - se_cs, ymax = mean_cs + se_cs), color = "black", width = 0.2) +
-  geom_errorbar(aes(ymin = mean_cs - sd_cs, ymax = mean_cs + sd_cs), color = "black", width = 0.2) +
-  # geom_point(data = range_supply, aes(x = coexistence_partition,
-  #                                     y = mean_cs+0.1), color = "white", size = 0) +
+  ggplot(aes(x = coexistence_partition, y = coexistence_strength)) +
+  geom_boxplot(aes(fill = coexistence_partition), outlier.shape = NA, 
+               notch = TRUE, coef = 1) + 
+  facet_grid(larval_scenario ~ species, scales = "free") +
+  geom_hline(yintercept = 0) +
+  scale_fill_manual(values=fad) +
+  theme_bw() +
+  scale_x_discrete(labels=xlab) + 
+  ylim(-10, 5) +
+  geom_text(data = filter(label_supply, species == "Balanus glandula"), 
+            aes(x = coexistence_partition, y = 5, 
+                label = panel_label),
+            position = position_nudge(x = -0.25, y = 0.5))+
+  theme_bw() +
+  theme(legend.position = "none", 
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        strip.text.y = element_blank(),
+        strip.text.x = element_text(face = "italic", size = 14),
+        axis.text = element_text(size = 14),
+        axis.title = element_text(size = 14)) + 
+  xlab("") +
+  ylab("Growth rate when rare") -> a
+
+# middle panel (c dalli)
+sim_output_df %>%
+  filter(larval_scenario %in% c("low", "high")) %>%
+  filter(species == "chthamalus_dalli") %>%
+  mutate(species = fct_recode(factor(species),
+                              `Limpets` = "limpets",
+                              `Balanus glandula` = "balanus_glandula",
+                              `Chthamalus dalli` = "chthamalus_dalli")) %>%
+  mutate(larval_scenario = fct_recode(factor(larval_scenario,
+                                             levels = c(
+                                               "low", "high"
+                                             )),
+                                      `All low` = "low",
+                                      `All high` = "high")) %>%
+  mutate(coexistence_partition = factor(coexistence_partition,
+                                        levels = c(
+                                          "r_bar",
+                                          "delta_0", 
+                                          "delta_p",
+                                          "delta_c",
+                                          "delta_cp"
+                                        ))) %>% 
+  ggplot(aes(x = coexistence_partition, y = coexistence_strength)) +
+  geom_boxplot(aes(fill = coexistence_partition), outlier.shape = NA, 
+               notch = TRUE, coef = 1) +                           
   facet_grid(larval_scenario ~ species) +
   geom_hline(yintercept = 0) +
   scale_fill_manual(values=fad) +
@@ -495,20 +465,17 @@ sim_output_df %>%
         axis.title.x = element_text(size = 14)) + 
   scale_x_discrete(labels=xlab) + 
   xlab("Mechanistic partitioning") +
-  ylab("Growth rate when rare") -> b
+  ylab("Growth rate when rare") +
+  ylim(-10, 5) -> b
 
 # right panel (limpets)
 sim_output_df %>%
   filter(larval_scenario %in% c("low", "high")) %>%
   filter(species == "limpets") %>%
-  group_by(larval_scenario, coexistence_partition, species) %>%
-  summarise(mean_cs = mean(coexistence_strength),
-            sd_cs = sd(coexistence_strength),
-            n_cs = n()) %>%
-  mutate(se_cs = sd_cs/sqrt(n_cs)) %>%
-  ungroup() %>%
-  left_join(sim_limpets_label) %>%
-  mutate(species = "Limpets") %>%
+  mutate(species = fct_recode(factor(species),
+                              `Limpets` = "limpets",
+                              `Balanus glandula` = "balanus_glandula",
+                              `Chthamalus dalli` = "chthamalus_dalli")) %>%
   mutate(larval_scenario = fct_recode(factor(larval_scenario,
                                              levels = c(
                                                "low", "high"
@@ -523,14 +490,9 @@ sim_output_df %>%
                                           "delta_c",
                                           "delta_cp"
                                         ))) %>% 
-  ggplot(aes(x = coexistence_partition, y = mean_cs)) +
-  geom_bar(stat = "identity", aes(fill = coexistence_partition), size = .25, color = "black") + 
-  # geom_errorbar(aes(ymin = mean_cs - se_cs, ymax = mean_cs + se_cs), 
-  #               color = "black", width = 0.2) +
-  geom_errorbar(aes(ymin = mean_cs - sd_cs, ymax = mean_cs + sd_cs), 
-                color = "black", width = 0.2) +
-  # geom_point(data = range_supply, aes(x = coexistence_partition,
-  #                                     y = mean_cs), color = "white") +
+  ggplot(aes(x = coexistence_partition, y = coexistence_strength)) +
+  geom_boxplot(aes(fill = coexistence_partition), outlier.shape = NA, 
+               notch = TRUE, coef = 1) + 
   facet_grid(larval_scenario ~ species) +
   geom_hline(yintercept = 0) +
   scale_fill_manual(values=fad) +
@@ -549,9 +511,10 @@ sim_output_df %>%
         axis.title.x = element_text(size = 14),
         strip.text = element_text( size = 14)) + 
   scale_x_discrete(labels=xlab) + 
-  xlab("") -> c
+  xlab("") +
+  ylim(-10, 5) -> c
 
-png(filename = "intertidal_maintext.png", width = 9, height = 6, units = "in", res = 300)
+png(filename = "intertidal_maintext.png", width = 8, height = 6, units = "in", res = 300)
 multiplot(a, b, c,
           layout = matrix(c(1,2,3,1,2,3), nrow=2, byrow=TRUE))
 dev.off()
